@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GoFrame 学习之路 - 前端开发者的 Go 转型指南</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+SC:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <nav class="navbar" id="navbar">
+    <div class="nav-container">
+      <a href="#" class="nav-logo">
+        <div class="logo-icon"><svg width="32" height="32" viewBox="0 0 32 32" fill="none"><rect width="32" height="32" rx="8" fill="url(#logoGrad)"/><text x="16" y="22" text-anchor="middle" fill="white" font-size="16" font-weight="bold" font-family="JetBrains Mono">Go</text><defs><linearGradient id="logoGrad" x1="0" y1="0" x2="32" y2="32"><stop offset="0%" stop-color="#00ADD8"/><stop offset="100%" stop-color="#00838F"/></linearGradient></defs></svg></div>
+        <span>GoFrame 学习之路</span>
+      </a>
+      <div class="nav-links" id="navLinks">
+        <a href="#roadmap" class="nav-link">学习路线</a>
+        <a href="#basics" class="nav-link">Go 基础</a>
+        <a href="#goframe" class="nav-link">GoFrame</a>
+        <a href="#projects" class="nav-link">实战项目</a>
+        <a href="#faq" class="nav-link">FAQ</a>
+      </div>
+      <div class="nav-actions">
+        <button class="theme-toggle" id="themeToggle" aria-label="切换主题">🌙</button>
+        <div class="progress-badge" id="progressBadge"><span id="progressText">0 / 15</span></div>
+        <button class="mobile-menu-btn" id="mobileMenuBtn"><span></span><span></span><span></span></button>
+      </div>
+    </div>
+  </nav>
+
+  <header class="hero" id="hero">
+    <div class="hero-bg"><canvas id="heroCanvas"></canvas></div>
+    <div class="hero-content">
+      <div class="hero-badge"><span class="badge-dot"></span>专为前端开发者设计的 Go 学习指南</div>
+      <h1 class="hero-title">从 <span class="text-gradient">JavaScript</span> 到 <span class="text-gradient-go">Go</span><br>你的全栈进阶之路</h1>
+      <p class="hero-desc">以前端开发者熟悉的视角，系统学习 Go 语言与 GoFrame 框架。<br>交互式代码示例 · 对比学习 · 实战项目驱动</p>
+      <div class="hero-actions">
+        <a href="#roadmap" class="btn btn-primary">▶ 开始学习</a>
+        <a href="#projects" class="btn btn-outline">📖 查看实战项目</a>
+      </div>
+      <div class="hero-stats">
+        <div class="stat-item"><span class="stat-number">15</span><span class="stat-label">核心章节</span></div>
+        <div class="stat-item"><span class="stat-number">80+</span><span class="stat-label">代码示例</span></div>
+        <div class="stat-item"><span class="stat-number">5</span><span class="stat-label">实战项目</span></div>
+        <div class="stat-item"><span class="stat-number">30+</span><span class="stat-label">常见问题</span></div>
+      </div>
+    </div>
+  </header>
+
+  <!-- 学习路线 -->
+  <section class="section" id="roadmap">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-tag">LEARNING PATH</span>
+        <h2 class="section-title">循序渐进的学习路径</h2>
+        <p class="section-desc">从你熟悉的前端概念出发，逐步掌握 Go 语言和 GoFrame 框架</p>
+      </div>
+      <div class="roadmap-timeline">
+        <div class="roadmap-item" data-aos><div class="roadmap-marker"><div class="marker-number">1</div></div><div class="roadmap-card"><div class="roadmap-card-header"><span class="phase-tag phase-beginner">入门阶段</span><span class="phase-duration">≈ 1-2 周</span></div><h3>Go 语言基础</h3><p>了解 Go 与 JavaScript 核心差异，掌握基础语法。</p><div class="roadmap-topics"><span>变量与类型</span><span>函数与方法</span><span>数组与切片</span><span>Map</span><span>结构体</span><span>错误处理</span></div></div></div>
+        <div class="roadmap-item" data-aos><div class="roadmap-marker"><div class="marker-number">2</div></div><div class="roadmap-card"><div class="roadmap-card-header"><span class="phase-tag phase-intermediate">进阶阶段</span><span class="phase-duration">≈ 2-3 周</span></div><h3>Go 核心特性</h3><p>深入理解接口、并发编程、包管理等核心特性。</p><div class="roadmap-topics"><span>接口</span><span>Goroutine</span><span>Channel</span><span>包管理</span><span>测试</span><span>指针</span></div></div></div>
+        <div class="roadmap-item" data-aos><div class="roadmap-marker"><div class="marker-number">3</div></div><div class="roadmap-card"><div class="roadmap-card-header"><span class="phase-tag phase-advanced">框架阶段</span><span class="phase-duration">≈ 2-3 周</span></div><h3>GoFrame 框架入门</h3><p>学习 GoFrame 核心概念：路由、中间件、请求处理。</p><div class="roadmap-topics"><span>项目结构</span><span>路由注册</span><span>中间件</span><span>请求响应</span><span>数据校验</span><span>配置管理</span></div></div></div>
+        <div class="roadmap-item" data-aos><div class="roadmap-marker"><div class="marker-number">4</div></div><div class="roadmap-card"><div class="roadmap-card-header"><span class="phase-tag phase-expert">实战阶段</span><span class="phase-duration">≈ 3-4 周</span></div><h3>GoFrame 高级应用</h3><p>掌握 ORM、缓存、日志、微服务等企业级能力。</p><div class="roadmap-topics"><span>ORM 数据库</span><span>缓存</span><span>日志系统</span><span>WebSocket</span><span>微服务</span><span>部署</span></div></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Go 基础课程 -->
+  <section class="section section-alt" id="basics">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-tag">GO BASICS</span>
+        <h2 class="section-title">以前端视角学 Go 语言</h2>
+        <p class="section-desc">用你最熟悉的 JavaScript 对比学习，快速掌握 Go 核心概念</p>
+      </div>
+      <div class="lesson-tabs">
+        <button class="lesson-tab active" data-lesson="variables">📦 变量与类型</button>
+        <button class="lesson-tab" data-lesson="functions">⚡ 函数与方法</button>
+        <button class="lesson-tab" data-lesson="structs">🏗️ 结构体</button>
+        <button class="lesson-tab" data-lesson="errors">🛡️ 错误处理</button>
+        <button class="lesson-tab" data-lesson="concurrency">🔄 并发编程</button>
+        <button class="lesson-tab" data-lesson="interfaces">🔌 接口</button>
+        <button class="lesson-tab" data-lesson="pointers">🎯 指针</button>
+      </div>
+      <div class="lesson-contents" id="lessonContents"></div>
+    </div>
+  </section>
+
+  <!-- GoFrame 框架 -->
+  <section class="section" id="goframe">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-tag">GOFRAME</span>
+        <h2 class="section-title">GoFrame — 企业级 Go 框架</h2>
+        <p class="section-desc">类比 Express/Koa 学习 GoFrame，快速上手 Web 服务开发</p>
+      </div>
+      <div class="framework-compare">
+        <div class="fw-card"><div class="fw-card-header fw-express"><span class="fw-icon">⚡</span><h3>Express.js</h3><span class="fw-sub">你熟悉的</span></div><div class="fw-card-body"><ul><li>路由中间件</li><li>请求/响应处理</li><li>模板引擎</li><li>需自行组合功能</li></ul></div></div>
+        <div class="fw-arrow">→</div>
+        <div class="fw-card highlight"><div class="fw-card-header fw-goframe"><span class="fw-icon">🚀</span><h3>GoFrame</h3><span class="fw-sub">你要学的</span></div><div class="fw-card-body"><ul><li>路由 + 中间件</li><li>ORM 数据库操作</li><li>配置管理</li><li>日志 / 缓存 / 校验</li><li>开发工具链 (gf cli)</li><li>企业级一站式方案</li></ul></div></div>
+      </div>
+      <div class="gf-lessons" id="gfLessons"></div>
+    </div>
+  </section>
+
+  <!-- 实战项目 -->
+  <section class="section section-alt" id="projects">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-tag">PROJECTS</span>
+        <h2 class="section-title">实战项目案例</h2>
+        <p class="section-desc">通过真实项目巩固知识，从简单到复杂逐步提升</p>
+      </div>
+      <div class="projects-grid" id="projectsGrid"></div>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section class="section" id="faq">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-tag">FAQ</span>
+        <h2 class="section-title">常见问题解答</h2>
+        <p class="section-desc">前端转 Go 开发最常遇到的问题和解决方案</p>
+      </div>
+      <div class="faq-list" id="faqList"></div>
+    </div>
+  </section>
+
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-content">
+        <div class="footer-brand"><div class="nav-logo"><div class="logo-icon"><svg width="28" height="28" viewBox="0 0 32 32" fill="none"><rect width="32" height="32" rx="8" fill="url(#logoGrad2)"/><text x="16" y="22" text-anchor="middle" fill="white" font-size="14" font-weight="bold" font-family="JetBrains Mono">Go</text><defs><linearGradient id="logoGrad2" x1="0" y1="0" x2="32" y2="32"><stop offset="0%" stop-color="#00ADD8"/><stop offset="100%" stop-color="#00838F"/></linearGradient></defs></svg></div><span>GoFrame 学习之路</span></div><p>专为前端开发者设计的 Go & GoFrame 学习平台</p></div>
+        <div class="footer-links"><h4>资源链接</h4><a href="https://golang.org/doc/" target="_blank">Go 官方文档</a><a href="https://goframe.org/" target="_blank">GoFrame 官网</a><a href="https://go.dev/play/" target="_blank">Go Playground</a><a href="https://go.dev/tour/" target="_blank">Go 之旅</a></div>
+        <div class="footer-links"><h4>社区</h4><a href="https://github.com/gogf/gf" target="_blank">GoFrame GitHub</a><a href="https://pkg.go.dev/" target="_blank">Go Packages</a><a href="https://forum.golangbridge.org/" target="_blank">Go Forum</a></div>
+      </div>
+      <div class="footer-bottom"><p>© 2026 GoFrame 学习之路 · 为前端开发者而建 ❤️</p></div>
+    </div>
+  </footer>
+
+  <button class="back-to-top" id="backToTop" aria-label="回到顶部">↑</button>
+  <script src="app.js"></script>
+</body>
+</html>
