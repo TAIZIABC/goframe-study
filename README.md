@@ -88,6 +88,9 @@ goframe-study/
 ├── styles.css      # 样式（支持深色/浅色主题）
 ├── app.js          # 核心逻辑（课程数据、渲染、交互）
 ├── index.js        # 辅助脚本
+├── todo-api/       # 实战项目：Todo List API（可独立运行）
+│   ├── manifest/sql/init.sql  # 数据库初始化脚本
+│   └── README.MD              # 项目说明与运行指南
 ├── .gitignore      # Git 忽略配置
 └── README.md       # 项目说明
 ```

@@ -976,6 +976,18 @@ todo-api/
     <span class="keyword">return</span> <span class="keyword">nil</span>, service.<span class="function">Todo</span>().<span class="function">Delete</span>(ctx, req.Id)
 }` },
       { title: 'Step 4：路由注册 & 启动', desc: '将 Controller 绑定到路由，启动服务', code: `<span class="comment">// internal/cmd/cmd.go</span>
+<span class="keyword">package</span> cmd
+
+<span class="keyword">import</span> (
+    <span class="string">"context"</span>
+
+    <span class="string">"github.com/gogf/gf/v2/frame/g"</span>
+    <span class="string">"github.com/gogf/gf/v2/net/ghttp"</span>
+    <span class="string">"github.com/gogf/gf/v2/os/gcmd"</span>
+
+    <span class="string">"todo-api/internal/controller"</span>
+)
+
 <span class="keyword">var</span> Main = gcmd.Command{
     Name: <span class="string">"main"</span>,
     Func: <span class="keyword">func</span>(ctx context.Context, parser *gcmd.Parser) (err <span class="type">error</span>) {
@@ -1467,6 +1479,19 @@ $ curl :8000/api/v1/profile \\
     }
 }` },
       { title: 'Step 5：路由注册与 Swagger 文档', desc: '完整路由结构、CORS 配置、自动生成 API 文档', code: `<span class="comment">// internal/cmd/cmd.go — 完整路由结构</span>
+<span class="keyword">package</span> cmd
+
+<span class="keyword">import</span> (
+    <span class="string">"context"</span>
+
+    <span class="string">"github.com/gogf/gf/v2/frame/g"</span>
+    <span class="string">"github.com/gogf/gf/v2/net/ghttp"</span>
+    <span class="string">"github.com/gogf/gf/v2/os/gcmd"</span>
+
+    <span class="string">"blog/internal/controller"</span>
+    <span class="string">"blog/internal/middleware"</span>
+)
+
 <span class="keyword">var</span> Main = gcmd.Command{
     Name: <span class="string">"main"</span>,
     Func: <span class="keyword">func</span>(ctx context.Context, parser *gcmd.Parser) (err <span class="type">error</span>) {
@@ -1843,6 +1868,24 @@ $ curl http://localhost:8000/swagger  <span class="comment"># 查看自动生成
     }
 }` },
       { title: 'Step 5：完整路由与 Docker 部署', desc: '路由结构、权限控制、Docker 多阶段构建部署', code: `<span class="comment">// internal/cmd/cmd.go — 电商 API 完整路由</span>
+<span class="keyword">package</span> cmd
+
+<span class="keyword">import</span> (
+    <span class="string">"context"</span>
+
+    <span class="string">"github.com/gogf/gf/v2/frame/g"</span>
+    <span class="string">"github.com/gogf/gf/v2/net/ghttp"</span>
+    <span class="string">"github.com/gogf/gf/v2/os/gcmd"</span>
+
+    <span class="string">"shop/internal/controller"</span>
+    <span class="string">"shop/internal/middleware"</span>
+)
+
+<span class="keyword">var</span> Main = gcmd.Command{
+    Name: <span class="string">"main"</span>,
+    Func: <span class="keyword">func</span>(ctx context.Context, parser *gcmd.Parser) (err <span class="type">error</span>) {
+        s := g.<span class="function">Server</span>()
+
 s.<span class="function">Group</span>(<span class="string">"/api/v1"</span>, <span class="keyword">func</span>(group *ghttp.RouterGroup) {
     group.<span class="function">Use</span>(ghttp.MiddlewareHandlerResponse)
 
@@ -2211,6 +2254,21 @@ $ curl http://localhost:8000/api/v1/products` },
 <span class="comment">// 优势：每个连接只占 ~4KB 内存</span>
 <span class="comment">// 10 万连接 ≈ 400MB，Node.js 同等规模需 2-4GB</span>` },
       { title: 'Step 4：路由注册与 Redis Pub/Sub', desc: '注册 WebSocket 端点，使用 Redis 实现多实例消息同步', code: `<span class="comment">// internal/cmd/cmd.go — WebSocket 路由注册</span>
+<span class="keyword">package</span> cmd
+
+<span class="keyword">import</span> (
+    <span class="string">"context"</span>
+    <span class="string">"fmt"</span>
+
+    <span class="string">"github.com/gogf/gf/v2/frame/g"</span>
+    <span class="string">"github.com/gogf/gf/v2/net/ghttp"</span>
+    <span class="string">"github.com/gogf/gf/v2/os/gcmd"</span>
+
+    <span class="string">"chat/internal/controller"</span>
+    <span class="string">"chat/internal/service"</span>
+    <span class="string">"chat/internal/websocket"</span>
+)
+
 <span class="keyword">var</span> Main = gcmd.Command{
     Name: <span class="string">"main"</span>,
     Func: <span class="keyword">func</span>(ctx context.Context, parser *gcmd.Parser) (err <span class="type">error</span>) {
@@ -2564,13 +2622,37 @@ function updateProgress() {
 
 // 代码复制
 function copyCode(btn) {
-  const code = btn.closest('.code-panel').querySelector('code');
+  const code = btn.closest('.code-panel')?.querySelector('code');
   if (!code) return;
   const text = code.textContent;
-  navigator.clipboard.writeText(text).then(() => {
+
+  function onSuccess() {
     btn.textContent = '已复制 ✓';
     setTimeout(() => btn.textContent = '复制', 2000);
-  });
+  }
+  function onFail() {
+    btn.textContent = '复制失败';
+    setTimeout(() => btn.textContent = '复制', 2000);
+  }
+
+  // 优先使用 Clipboard API（需要安全上下文）
+  if (navigator.clipboard && window.isSecureContext) {
+    navigator.clipboard.writeText(text).then(onSuccess).catch(onFail);
+  } else {
+    // 降级方案：使用传统的 execCommand
+    try {
+      const textarea = document.createElement('textarea');
+      textarea.value = text;
+      textarea.style.cssText = 'position:fixed;left:-9999px;top:-9999px;opacity:0';
+      document.body.appendChild(textarea);
+      textarea.select();
+      const ok = document.execCommand('copy');
+      document.body.removeChild(textarea);
+      ok ? onSuccess() : onFail();
+    } catch (e) {
+      onFail();
+    }
+  }
 }
 
 // 运行代码 (Go Playground)

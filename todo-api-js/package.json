@@ -1,0 +1,14 @@
+{
+  "name": "todo-api-js",
+  "version": "1.0.0",
+  "description": "Todo API - JavaScript 版本 (对标 GoFrame todo-api)",
+  "main": "main.js",
+  "scripts": {
+    "start": "node main.js",
+    "dev": "node main.js"
+  },
+  "dependencies": {
+    "express": "^4.21.0",
+    "mysql2": "^3.11.0"
+  }
+}
