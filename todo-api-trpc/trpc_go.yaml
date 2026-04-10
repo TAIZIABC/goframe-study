@@ -1,0 +1,28 @@
+# tRPC-Go 框架配置文件
+# -----------------------------------------------
+# 对标 GoFrame: manifest/config/config.yaml
+# GoFrame 配置:
+#   server:
+#     address: ":8000"
+#   database:
+#     default:
+#       link: "mysql:root:xxx@tcp(...)/todo_db"
+#
+# tRPC-Go 使用 trpc_go.yaml 作为框架配置文件
+# 通过 protocol: http_no_protocol 提供泛 HTTP 标准服务
+# -----------------------------------------------
+
+global:
+  namespace: Development
+  env_name: test
+
+server:
+  app: todo
+  server: api
+  service:
+    - name: trpc.todo.api.stdhttp       # service 路由名称
+      network: tcp                       # 网络监听类型
+      protocol: http_no_protocol         # 泛 HTTP 标准服务（无需 protobuf）
+      timeout: 5000                      # 请求最长处理时间，单位毫秒
+      ip: 0.0.0.0
+      port: 8000                         # 监听端口，与 GoFrame 版一致
