@@ -10,8 +10,8 @@ logger:
 
 database:
   default:
-    host: "9.134.232.197"
+    host: "数据库地址"
     port: 3306
-    user: "root"
-    password: "lsj@24625"
+    user: "用户名"
+    password: "密码"
     database: "todo_db"

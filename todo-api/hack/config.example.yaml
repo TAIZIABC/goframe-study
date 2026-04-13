@@ -4,7 +4,7 @@
 gfcli:
   gen:
     dao:
-      - link: "mysql:root:lsj@24625@tcp(9.134.232.197:3306)/todo_db"
+      - link: "mysql:用户名:密码@tcp(数据库地址:3306)/todo_db"
         descriptionTag: true
 
   docker:

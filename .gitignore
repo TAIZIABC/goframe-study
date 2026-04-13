@@ -2,3 +2,8 @@
 .codebuddy/
 node_modules/
 *.log
+
+# 敏感配置文件（含数据库密码等）
+todo-api/manifest/config/config.yaml
+todo-api/hack/config.yaml
+todo-api-js/manifest/config/config.yaml

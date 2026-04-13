@@ -17,6 +17,7 @@ package database
 import (
 	"database/sql"
 	"fmt"
+	"os"
 	"sync"
 
 	_ "github.com/go-sql-driver/mysql"
@@ -37,16 +38,29 @@ type Config struct {
 	Database string
 }
 
-// DefaultConfig 返回默认数据库配置
+// DefaultConfig 返回默认数据库配置（从环境变量读取）
 // 对标 GoFrame: manifest/config/config.yaml 中的 database.default.link
 func DefaultConfig() *Config {
-	return &Config{
-		Host:     "9.134.232.197",
-		Port:     3306,
-		User:     "root",
-		Password: "lsj@24625",
-		Database: "todo_db",
+	port := 3306
+	if v := os.Getenv("DB_PORT"); v != "" {
+		if p, err := fmt.Sscanf(v, "%d", &port); p == 0 || err != nil {
+			port = 3306
+		}
 	}
+	return &Config{
+		Host:     getEnv("DB_HOST", "127.0.0.1"),
+		Port:     port,
+		User:     getEnv("DB_USER", "root"),
+		Password: getEnv("DB_PASSWORD", ""),
+		Database: getEnv("DB_NAME", "todo_db"),
+	}
+}
+
+func getEnv(key, fallback string) string {
+	if v := os.Getenv(key); v != "" {
+		return v
+	}
+	return fallback
 }
 
 // Init 初始化数据库连接
