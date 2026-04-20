@@ -1,0 +1,16 @@
+{
+  "name": "go-web-book-vitepress",
+  "version": "1.0.0",
+  "description": "Go Web 编程 - VitePress 版",
+  "scripts": {
+    "dev": "vitepress dev docs",
+    "build": "vitepress build docs",
+    "preview": "vitepress preview docs"
+  },
+  "keywords": ["go", "golang", "web", "vitepress"],
+  "author": "astaxie",
+  "license": "BSD-3-Clause",
+  "devDependencies": {
+    "vitepress": "^1.6.4"
+  }
+}

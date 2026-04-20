@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#00ADD8;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#5DC9E2;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  <rect width="200" height="200" rx="40" fill="url(#bg)"/>
+  <text x="100" y="85" text-anchor="middle" fill="white" font-size="56" font-weight="bold" font-family="system-ui, -apple-system, sans-serif">Go</text>
+  <text x="100" y="135" text-anchor="middle" fill="white" font-size="32" font-weight="600" font-family="system-ui, -apple-system, sans-serif">Web</text>
+  <text x="100" y="170" text-anchor="middle" fill="rgba(255,255,255,0.8)" font-size="20" font-weight="400" font-family="system-ui, -apple-system, sans-serif">编程</text>
+</svg>
