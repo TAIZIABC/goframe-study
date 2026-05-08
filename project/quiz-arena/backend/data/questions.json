@@ -1,0 +1,2080 @@
+[
+  {
+    "id": 1,
+    "category": "Goroutine",
+    "difficulty": 1,
+    "title": "下面代码的输出是？",
+    "code": "func main() {\n    go fmt.Println(\"hello\")\n    fmt.Println(\"world\")\n}",
+    "options": [
+      "hello\\nworld",
+      "world\\nhello",
+      "只输出 world（大概率）",
+      "编译错误"
+    ],
+    "answer": 2,
+    "explain": "go 关键字启动的 goroutine 异步执行，主 goroutine 不等待它就结束了，程序退出。通常只看到 world，hello 可能还没来得及打印。"
+  },
+  {
+    "id": 2,
+    "category": "Goroutine",
+    "difficulty": 1,
+    "title": "关于 goroutine，下列说法错误的是？",
+    "options": [
+      "goroutine 是轻量级线程，由 Go runtime 调度",
+      "goroutine 的栈初始大小约 2KB，可动态扩展",
+      "每个 goroutine 对应一个独立的 OS 线程",
+      "主 goroutine 退出时，其他 goroutine 会被强制终止"
+    ],
+    "answer": 2,
+    "explain": "Go 采用 M:N 调度模型，多个 goroutine 复用少量 OS 线程，并非一对一关系。这正是 goroutine 轻量、可同时存在成千上万的原因。"
+  },
+  {
+    "id": 3,
+    "category": "Goroutine",
+    "difficulty": 3,
+    "title": "以下代码存在什么问题？",
+    "code": "for i := 0; i \u003c 3; i++ {\n    go func() {\n        fmt.Println(i)\n    }()\n}",
+    "options": [
+      "没有问题，输出 0 1 2",
+      "闭包捕获了循环变量 i 的引用，输出可能都是 3",
+      "编译不通过",
+      "goroutine 泄露"
+    ],
+    "answer": 1,
+    "explain": "在 Go 1.22 之前，闭包捕获的是变量 i 的地址；循环结束时 i=3，所有 goroutine 看到的都是 3。应通过参数传值：go func(i int){...}(i)。"
+  },
+  {
+    "id": 4,
+    "category": "Channel",
+    "difficulty": 1,
+    "title": "无缓冲 channel 和有缓冲 channel 的本质区别是？",
+    "options": [
+      "有缓冲 channel 性能更好",
+      "无缓冲 channel 的发送和接收必须同步配对",
+      "有缓冲 channel 线程安全，无缓冲的不安全",
+      "无缓冲 channel 只能传输一次数据"
+    ],
+    "answer": 1,
+    "explain": "无缓冲 channel（同步 channel）要求发送方和接收方必须同时就绪才能完成通信；有缓冲 channel 只要缓冲区未满就能发送，未空就能接收。"
+  },
+  {
+    "id": 5,
+    "category": "Channel",
+    "difficulty": 2,
+    "title": "向已关闭的 channel 发送数据会发生什么？",
+    "options": [
+      "返回零值",
+      "阻塞",
+      "panic",
+      "被忽略"
+    ],
+    "answer": 2,
+    "explain": "向已关闭的 channel 发送数据会触发 panic: send on closed channel。从已关闭的 channel 接收则会立即返回零值，且 ok=false。"
+  },
+  {
+    "id": 6,
+    "category": "Channel",
+    "difficulty": 2,
+    "title": "下面代码输出是？",
+    "code": "ch := make(chan int, 2)\nch \u003c- 1\nch \u003c- 2\nclose(ch)\nfor v := range ch {\n    fmt.Println(v)\n}",
+    "options": [
+      "panic",
+      "1 2",
+      "1 2 并永远阻塞",
+      "0 0"
+    ],
+    "answer": 1,
+    "explain": "已关闭的 channel 可以继续读取缓冲区中剩余的数据，读完后 range 自动结束。所以正常打印 1 和 2。"
+  },
+  {
+    "id": 7,
+    "category": "Channel",
+    "difficulty": 2,
+    "title": "关于 channel 的关闭，下列说法正确的是？",
+    "options": [
+      "channel 由接收方负责关闭",
+      "channel 由发送方负责关闭",
+      "重复关闭 channel 不会有影响",
+      "nil channel 可以被关闭"
+    ],
+    "answer": 1,
+    "explain": "原则：由发送方关闭 channel，因为只有发送方知道何时没有更多数据。重复关闭或关闭 nil channel 都会 panic。"
+  },
+  {
+    "id": 8,
+    "category": "Select",
+    "difficulty": 2,
+    "title": "select 语句中多个 case 同时就绪时，会怎么处理？",
+    "options": [
+      "按顺序执行第一个",
+      "按声明顺序执行最后一个",
+      "随机选择一个执行",
+      "全部并发执行"
+    ],
+    "answer": 2,
+    "explain": "当多个 case 同时就绪时，Go runtime 伪随机选择一个执行，这是为了避免 starvation（饥饿）问题。"
+  },
+  {
+    "id": 9,
+    "category": "Select",
+    "difficulty": 2,
+    "title": "实现 1 秒超时的 channel 接收，正确写法是？",
+    "options": [
+      "ch := \u003c-time.After(time.Second)",
+      "select { case v := \u003c-ch: ...; case \u003c-time.After(time.Second): ... }",
+      "time.Sleep(time.Second); \u003c-ch",
+      "go func() { time.Sleep(time.Second); close(ch) }()"
+    ],
+    "answer": 1,
+    "explain": "select 配合 time.After 是 Go 中实现超时控制的经典模式。但在高频调用时建议用 context.WithTimeout 避免 time.After 的 timer 泄露。"
+  },
+  {
+    "id": 10,
+    "category": "WaitGroup",
+    "difficulty": 2,
+    "title": "关于 sync.WaitGroup，下列说法错误的是？",
+    "options": [
+      "Add 应在 goroutine 外部调用",
+      "Done 等价于 Add(-1)",
+      "Wait 可以在多个 goroutine 中并发调用",
+      "WaitGroup 可以复制（值传递）使用"
+    ],
+    "answer": 3,
+    "explain": "WaitGroup 含内部计数器，复制后会变成两个独立的 WG，导致行为异常。必须通过指针传递。Go vet 会提示 \"passes lock by value\"。"
+  },
+  {
+    "id": 11,
+    "category": "WaitGroup",
+    "difficulty": 3,
+    "title": "下面代码的问题是？",
+    "code": "var wg sync.WaitGroup\nfor i := 0; i \u003c 3; i++ {\n    go func() {\n        wg.Add(1)\n        defer wg.Done()\n        // work\n    }()\n}\nwg.Wait()",
+    "options": [
+      "没有问题",
+      "Add 应在 goroutine 启动前调用，否则 Wait 可能提前返回",
+      "Done 写法错误",
+      "应使用 Add(3)"
+    ],
+    "answer": 1,
+    "explain": "Add 必须在启动 goroutine 之前调用。如果放在 goroutine 内部，Wait 可能在 Add 执行前就看到计数器为 0 从而直接返回，导致等待失效。"
+  },
+  {
+    "id": 12,
+    "category": "Mutex",
+    "difficulty": 2,
+    "title": "以下关于 sync.Mutex 的说法，错误的是？",
+    "options": [
+      "不可重入，同一 goroutine 重复 Lock 会死锁",
+      "Unlock 可以在任意 goroutine 中调用",
+      "Mutex 零值即可直接使用，无需初始化",
+      "Mutex 适合读多写少的场景"
+    ],
+    "answer": 3,
+    "explain": "读多写少的场景应使用 sync.RWMutex，允许多个读并发。Mutex 任何时刻只允许一个 goroutine 持有锁，读写都互斥。"
+  },
+  {
+    "id": 13,
+    "category": "Mutex",
+    "difficulty": 3,
+    "title": "以下哪种做法可以避免死锁？",
+    "options": [
+      "所有 goroutine 按相同顺序获取多个锁",
+      "使用 recover() 捕获死锁",
+      "在 Lock 前先 sleep 一段时间",
+      "把所有 Mutex 放到一个全局变量中"
+    ],
+    "answer": 0,
+    "explain": "多个锁场景下，死锁最常见的原因是不同 goroutine 以不同顺序加锁。统一加锁顺序是最简单有效的防死锁策略。Go 的死锁不能被 recover 捕获。"
+  },
+  {
+    "id": 14,
+    "category": "Atomic",
+    "difficulty": 2,
+    "title": "atomic 操作和 Mutex 相比，主要优势是？",
+    "options": [
+      "更易使用",
+      "支持更多数据类型",
+      "无锁，性能更高，但只适合简单操作",
+      "可以保护整个代码块"
+    ],
+    "answer": 2,
+    "explain": "atomic 基于 CPU 原子指令实现，无锁开销，性能通常比 Mutex 高一个数量级，但只能用于单个变量的简单读/写/加减/CAS 操作。"
+  },
+  {
+    "id": 15,
+    "category": "Context",
+    "difficulty": 2,
+    "title": "context.WithTimeout 返回的 cancel 函数作用是？",
+    "options": [
+      "没有作用，超时会自动取消",
+      "必须调用以释放资源，防止 context 泄露",
+      "强制立即超时",
+      "取消父 context"
+    ],
+    "answer": 1,
+    "explain": "即使 context 已超时自动取消，也必须调用 cancel 以释放关联的 timer 和资源。最佳实践是 defer cancel()。"
+  },
+  {
+    "id": 16,
+    "category": "Context",
+    "difficulty": 1,
+    "title": "关于 context 的传递，下列哪个是最佳实践？",
+    "options": [
+      "作为结构体字段存储",
+      "作为函数的第一个参数显式传递",
+      "使用全局变量",
+      "用 goroutine-local 存储"
+    ],
+    "answer": 1,
+    "explain": "官方建议 context 作为函数第一个参数传递（习惯命名为 ctx），而非存储在结构体中。这样调用链上的每一层都能明确看到 context。"
+  },
+  {
+    "id": 17,
+    "category": "Context",
+    "difficulty": 2,
+    "title": "父 context 被取消时，子 context 会？",
+    "options": [
+      "不受影响",
+      "也会被自动取消",
+      "需要手动调用 cancel",
+      "变成新的根 context"
+    ],
+    "answer": 1,
+    "explain": "context 形成树状结构。父 context 取消时，所有派生的子 context 都会被级联取消，这正是 context 控制 goroutine 生命周期的核心机制。"
+  },
+  {
+    "id": 18,
+    "category": "综合",
+    "difficulty": 2,
+    "title": "下面代码运行结果？",
+    "code": "ch := make(chan int)\nclose(ch)\nv, ok := \u003c-ch\nfmt.Println(v, ok)",
+    "options": [
+      "panic",
+      "0 true",
+      "0 false",
+      "永远阻塞"
+    ],
+    "answer": 2,
+    "explain": "从已关闭的 channel 接收不会 panic，会立刻得到零值。第二个返回值 ok 为 false 表示 channel 已关闭。"
+  },
+  {
+    "id": 19,
+    "category": "综合",
+    "difficulty": 1,
+    "title": "以下哪种场景最适合使用 sync.Once？",
+    "options": [
+      "保护频繁读写的共享变量",
+      "等待多个 goroutine 完成",
+      "确保单例对象只被初始化一次",
+      "实现读写锁"
+    ],
+    "answer": 2,
+    "explain": "sync.Once 保证某操作在并发环境下只被执行一次，典型用法是延迟初始化（lazy init）和单例模式。"
+  },
+  {
+    "id": 20,
+    "category": "综合",
+    "difficulty": 1,
+    "title": "Go 中 \"不要通过共享内存来通信，而应通过通信来共享内存\" 这句话最贴切描述？",
+    "options": [
+      "尽量避免使用 Mutex",
+      "推崇用 channel 传递数据，代替锁共享变量",
+      "全部用 atomic 操作",
+      "禁用全局变量"
+    ],
+    "answer": 1,
+    "explain": "这是 Go 并发哲学的核心：优先用 channel 显式地在 goroutine 间传递数据的所有权，而非让多个 goroutine 通过锁共享同一份内存。"
+  },
+  {
+    "id": 21,
+    "category": "切片",
+    "difficulty": 1,
+    "title": "下面代码输出什么？",
+    "code": "s := []int{1, 2, 3}\ns = append(s, 4)\nfmt.Println(len(s), cap(s))",
+    "options": [
+      "3 3",
+      "4 4",
+      "4 6",
+      "依赖实现，但 len 一定是 4"
+    ],
+    "answer": 3,
+    "explain": "append 使底层数组扩容，len 一定是 4；cap 是由运行时策略决定的（常见为翻倍到 6，但不保证），所以只能确定 len=4。严谨来说这题最准确的说法是 D。"
+  },
+  {
+    "id": 22,
+    "category": "切片",
+    "difficulty": 2,
+    "title": "以下代码输出？",
+    "code": "a := []int{1, 2, 3, 4, 5}\nb := a[1:3]\nb = append(b, 99)\nfmt.Println(a)",
+    "options": [
+      "[1 2 3 4 5]",
+      "[1 2 3 99 5]",
+      "[1 2 3 4 5 99]",
+      "panic"
+    ],
+    "answer": 1,
+    "explain": "b 与 a 共享底层数组，b 的 cap 为 4。append(b, 99) 未触发扩容，直接写回底层数组下标 3 的位置，于是 a[3] 被覆盖为 99。"
+  },
+  {
+    "id": 23,
+    "category": "切片",
+    "difficulty": 2,
+    "title": "nil 切片与空切片的区别，下列说法正确的是？",
+    "options": [
+      "nil 切片不能 append",
+      "空切片 len=0 且底层数组指针非 nil，nil 切片 len=0 且指针为 nil，但两者使用几乎无差别",
+      "两者 == nil 比较结果相同",
+      "JSON 序列化结果完全一样"
+    ],
+    "answer": 1,
+    "explain": "nil 切片可以直接 append；两者都可遍历、取 len=0；== nil 仅 nil 切片为 true；encoding/json 默认把 nil 切片编码为 null，空切片为 []，所以序列化结果不同。"
+  },
+  {
+    "id": 24,
+    "category": "切片",
+    "difficulty": 3,
+    "title": "以下函数能否修改调用方的切片元素？",
+    "code": "func f(s []int) {\n    s[0] = 100\n    s = append(s, 999)\n}",
+    "options": [
+      "s[0]=100 和 append 都能被外部看到",
+      "s[0]=100 能被外部看到，append 可能看不到",
+      "都看不到，切片是值传递",
+      "编译错误"
+    ],
+    "answer": 1,
+    "explain": "切片是 {指针, len, cap} 的结构体值传递，底层数组是共享的，所以 s[0]=100 外部可见；而 append 可能触发扩容，修改的是函数内部的新切片 header，外部看不到新追加的元素。"
+  },
+  {
+    "id": 25,
+    "category": "Map",
+    "difficulty": 1,
+    "title": "向 nil map 写入数据会？",
+    "options": [
+      "自动创建并写入",
+      "写入成功但读不到",
+      "panic",
+      "返回错误"
+    ],
+    "answer": 2,
+    "explain": "未 make 的 map 为 nil。读 nil map 返回零值不会 panic，但写入会触发 panic: assignment to entry in nil map。使用前必须 make 或用字面量初始化。"
+  },
+  {
+    "id": 26,
+    "category": "Map",
+    "difficulty": 1,
+    "title": "如何判断 map 中某个 key 是否存在？",
+    "options": [
+      "if m[k] != nil",
+      "if v, ok := m[k]; ok",
+      "if len(m[k]) \u003e 0",
+      "用 reflect.ValueOf(m).MapIndex(k).IsValid()"
+    ],
+    "answer": 1,
+    "explain": "Go 的 map 访问支持二值返回：v 为值（不存在时为零值），ok 为 bool 表示是否存在。这是判断 key 是否存在的标准惯用写法。"
+  },
+  {
+    "id": 27,
+    "category": "Map",
+    "difficulty": 2,
+    "title": "关于 map 的遍历顺序，下列说法正确的是？",
+    "options": [
+      "按插入顺序",
+      "按 key 升序",
+      "每次运行遍历顺序是随机的",
+      "按 key 的 hash 顺序，固定不变"
+    ],
+    "answer": 2,
+    "explain": "Go 故意让 map 每次遍历顺序随机（runtime 在迭代起点引入随机化），避免程序员错误地依赖某种顺序。需要有序请自己对 key 排序。"
+  },
+  {
+    "id": 28,
+    "category": "Map",
+    "difficulty": 3,
+    "title": "在多个 goroutine 中并发读写同一个 map，会？",
+    "options": [
+      "自动加锁，安全",
+      "只读安全，一读一写/一写会 fatal error",
+      "任何并发访问都 panic",
+      "性能下降但不会出错"
+    ],
+    "answer": 1,
+    "explain": "内置 map 非并发安全。多读安全，但一旦有写就必须加锁；runtime 检测到并发读写会直接 fatal error: concurrent map read and map write。高并发读写场景应用 sync.Map 或 RWMutex。"
+  },
+  {
+    "id": 29,
+    "category": "字符串",
+    "difficulty": 1,
+    "title": "以下代码输出？",
+    "code": "s := \"你好\"\nfmt.Println(len(s))",
+    "options": [
+      "2",
+      "4",
+      "6",
+      "取决于操作系统"
+    ],
+    "answer": 2,
+    "explain": "Go 的 string 底层是 []byte，len(s) 返回字节数。UTF-8 下每个中文字符通常占 3 字节，\"你好\" = 6 字节。要获取字符数应使用 utf8.RuneCountInString 或 len([]rune(s))。"
+  },
+  {
+    "id": 30,
+    "category": "字符串",
+    "difficulty": 2,
+    "title": "关于 string 与 []byte 转换，下列说法错误的是？",
+    "options": [
+      "string 是不可变的，[]byte 可变",
+      "string([]byte{...}) 和 []byte(s) 会发生内存拷贝",
+      "修改 []byte 不会影响原 string",
+      "string 和 []byte 共享底层数组，强转即可零拷贝"
+    ],
+    "answer": 3,
+    "explain": "string 不可变是类型系统保证的前提，所以 string \u003c-\u003e []byte 的转换必须拷贝（除非使用 unsafe 绕过）。依赖 \"共享\" 会破坏不可变性，是典型误区。"
+  },
+  {
+    "id": 31,
+    "category": "defer",
+    "difficulty": 1,
+    "title": "以下代码输出？",
+    "code": "func f() {\n    defer fmt.Println(1)\n    defer fmt.Println(2)\n    defer fmt.Println(3)\n}",
+    "options": [
+      "1 2 3",
+      "3 2 1",
+      "随机",
+      "只打印 3"
+    ],
+    "answer": 1,
+    "explain": "defer 是后进先出（LIFO）栈。后声明的 defer 先执行，故输出为 3 2 1。"
+  },
+  {
+    "id": 32,
+    "category": "defer",
+    "difficulty": 2,
+    "title": "以下代码的返回值是？",
+    "code": "func f() (x int) {\n    defer func() { x++ }()\n    return 10\n}",
+    "options": [
+      "10",
+      "11",
+      "0",
+      "编译错误"
+    ],
+    "answer": 1,
+    "explain": "具名返回值时，return 10 实际是 x=10 然后执行 defer；defer 中 x++ 把 x 改为 11，最终返回 11。这就是 defer 能修改返回值的经典场景。"
+  },
+  {
+    "id": 33,
+    "category": "defer",
+    "difficulty": 2,
+    "title": "以下代码输出？",
+    "code": "i := 0\ndefer fmt.Println(i)\ni = 100",
+    "options": [
+      "0",
+      "100",
+      "随机",
+      "不输出"
+    ],
+    "answer": 0,
+    "explain": "defer 在声明时就会对函数参数求值（捕获当时的 i=0），延后执行的只是调用动作本身。因此后面修改 i 不会影响打印结果。"
+  },
+  {
+    "id": 34,
+    "category": "接口",
+    "difficulty": 1,
+    "title": "Go 中的接口实现是？",
+    "options": [
+      "必须显式 implements 声明",
+      "通过方法集隐式实现（duck typing）",
+      "必须继承",
+      "需要注册到全局表"
+    ],
+    "answer": 1,
+    "explain": "Go 接口是结构化/隐式的：只要一个类型拥有接口要求的所有方法签名，就自动实现该接口，不需要 implements 关键字。"
+  },
+  {
+    "id": 35,
+    "category": "接口",
+    "difficulty": 3,
+    "title": "以下代码输出？",
+    "code": "func f() error {\n    var p *MyErr = nil\n    return p\n}\n// 调用处\nerr := f()\nfmt.Println(err == nil)",
+    "options": [
+      "true",
+      "false",
+      "panic",
+      "编译错误"
+    ],
+    "answer": 1,
+    "explain": "这是著名的 \"nil interface 陷阱\"：接口值由 (type, value) 组成，f 返回的接口类型信息不为 nil（*MyErr），仅 value 为 nil，所以 err != nil，输出 false。应直接 return nil。"
+  },
+  {
+    "id": 36,
+    "category": "接口",
+    "difficulty": 2,
+    "title": "关于空接口 interface{}（any），下列说法错误的是？",
+    "options": [
+      "任何类型都实现了空接口",
+      "interface{} 和 any 完全等价（Go 1.18+）",
+      "从空接口中取出具体类型需要类型断言或 switch",
+      "空接口变量赋值不会引入任何额外开销"
+    ],
+    "answer": 3,
+    "explain": "把具体值赋给空接口时，Go 需要存储类型信息和值（可能发生装箱/堆分配），存在一定开销。泛型出现后应尽量避免用 any 代替具体类型。"
+  },
+  {
+    "id": 37,
+    "category": "错误处理",
+    "difficulty": 1,
+    "title": "Go 中推荐的错误处理方式是？",
+    "options": [
+      "try/catch",
+      "返回 error 作为最后一个返回值并显式检查",
+      "panic/recover 代替错误返回",
+      "用异常码填充全局变量"
+    ],
+    "answer": 1,
+    "explain": "Go 没有异常机制，约定函数把 error 作为最后一个返回值；调用方用 if err != nil 显式处理。panic 仅用于不可恢复错误或程序 bug。"
+  },
+  {
+    "id": 38,
+    "category": "错误处理",
+    "difficulty": 2,
+    "title": "errors.Is 和 errors.As 的区别是？",
+    "options": [
+      "Is 比较值是否相等，As 把错误转换为指定类型",
+      "两者完全等价",
+      "Is 只能用于标准库错误",
+      "As 只能用于自定义错误"
+    ],
+    "answer": 0,
+    "explain": "errors.Is(err, target) 在错误链中查找是否存在语义相等的目标错误（值比较）；errors.As(err, \u0026target) 在错误链中查找并把第一个匹配类型的错误赋值给目标变量（类型断言）。"
+  },
+  {
+    "id": 39,
+    "category": "错误处理",
+    "difficulty": 2,
+    "title": "使用 fmt.Errorf 包装错误时，保持错误链可用的正确写法是？",
+    "options": [
+      "fmt.Errorf(\"wrap: %s\", err)",
+      "fmt.Errorf(\"wrap: %v\", err)",
+      "fmt.Errorf(\"wrap: %w\", err)",
+      "errors.New(\"wrap: \" + err.Error())"
+    ],
+    "answer": 2,
+    "explain": "只有 %w 会生成实现了 Unwrap() error 的包装错误，errors.Is/As 才能穿透查找。%v 和 %s 只拼接字符串，丢失原错误链。"
+  },
+  {
+    "id": 40,
+    "category": "指针",
+    "difficulty": 1,
+    "title": "关于 Go 指针，下列说法错误的是？",
+    "options": [
+      "没有指针运算，不能做 p+1 这种偏移",
+      "nil 指针解引用会 panic",
+      "可以通过 unsafe 包绕过类型系统",
+      "\u0026x 取地址后，x 一定会逃逸到堆"
+    ],
+    "answer": 3,
+    "explain": "取地址不一定导致逃逸，编译器做逃逸分析：如果能确定指针不会离开栈帧（如只在函数内使用），变量仍在栈上分配。"
+  },
+  {
+    "id": 41,
+    "category": "指针",
+    "difficulty": 2,
+    "title": "值接收者与指针接收者方法混用时，下列说法正确的是？",
+    "options": [
+      "两种接收者可以自由混用，不影响接口实现",
+      "若接口方法需指针接收者，值类型变量不能直接赋值给该接口",
+      "指针接收者会自动转为值接收者",
+      "Go 不支持指针接收者"
+    ],
+    "answer": 1,
+    "explain": "方法集规则：T 的方法集只含值接收者方法，*T 的方法集含值接收者+指针接收者方法。若接口某方法是指针接收者实现，则只有 *T 才满足接口，T 不满足。"
+  },
+  {
+    "id": 42,
+    "category": "结构体",
+    "difficulty": 2,
+    "title": "关于结构体的比较，下列说法正确的是？",
+    "options": [
+      "所有结构体都可以用 == 比较",
+      "含 slice、map、func 字段的结构体不能用 == 比较",
+      "结构体不能作为 map 的 key",
+      "struct{} 的大小不是 0"
+    ],
+    "answer": 1,
+    "explain": "结构体是否可比较取决于所有字段是否可比较。slice、map、func 不可比较，包含它们的结构体也不可比较，也不能作 map key。struct{} 是零大小类型（常用作信号）。"
+  },
+  {
+    "id": 43,
+    "category": "结构体",
+    "difficulty": 2,
+    "title": "关于 struct tag，下列说法错误的是？",
+    "options": [
+      "tag 是字符串字面量，写在字段后面，用反引号包裹",
+      "encoding/json 会读取 `json:\"xxx\"` 作为字段名",
+      "tag 参与编译检查，格式错误会编译报错",
+      "tag 只能在运行时通过反射读取"
+    ],
+    "answer": 2,
+    "explain": "struct tag 在语法上就是一个字符串，编译器不校验其内部格式；格式错了也能编译通过，只是运行时反射解析出错/行为异常，所以框架才强调 go vet 检查 tag。"
+  },
+  {
+    "id": 44,
+    "category": "泛型",
+    "difficulty": 2,
+    "title": "Go 泛型（1.18+）中 any 和 comparable 的区别是？",
+    "options": [
+      "没有区别，是别名",
+      "any 是 interface{} 别名；comparable 表示可用 == 比较的类型",
+      "comparable 等价于 any + Stringer",
+      "any 只能用于函数，comparable 只能用于结构体"
+    ],
+    "answer": 1,
+    "explain": "any = interface{}，任意类型。comparable 是 Go 内置类型约束，限制类型参数必须支持 == 和 !=（常用于泛型 map key、集合 key 等场景）。"
+  },
+  {
+    "id": 45,
+    "category": "语法",
+    "difficulty": 1,
+    "title": "以下关于 iota，错误的是？",
+    "options": [
+      "iota 只能在 const 块中使用",
+      "同一个 const 块中每一行 iota 自增 1",
+      "iota 可以参与表达式，如 1 \u003c\u003c iota",
+      "iota 在每次被引用时都会重置为 0"
+    ],
+    "answer": 3,
+    "explain": "iota 在 const 块开始时重置为 0，每遇到一个 ConstSpec（一行）自增 1，同一行多次使用是同一个值。它不是每次被引用就清零。"
+  },
+  {
+    "id": 46,
+    "category": "语法",
+    "difficulty": 2,
+    "title": "以下循环，Go 1.22 之前与之后行为差异是？",
+    "code": "for i, v := range []int{1,2,3} {\n    go func() { fmt.Println(i, v) }()\n}",
+    "options": [
+      "无差异",
+      "1.22 之前 i、v 会被所有 goroutine 共享，之后每次迭代都是新变量",
+      "1.22 之后需要显式 i := i",
+      "语法错误"
+    ],
+    "answer": 1,
+    "explain": "Go 1.22 修改了 for range 的语义：每次迭代 i、v 都是新变量，闭包捕获不再踩坑。1.22 之前必须 i := i 或作为参数传入避免共享。"
+  },
+  {
+    "id": 47,
+    "category": "语法",
+    "difficulty": 1,
+    "title": "以下代码输出？",
+    "code": "a, b := 1, 2\na, b = b, a\nfmt.Println(a, b)",
+    "options": [
+      "1 2",
+      "2 1",
+      "1 1",
+      "编译错误"
+    ],
+    "answer": 1,
+    "explain": "Go 支持多赋值，右侧表达式先整体求值后再赋值，天然实现交换。输出 2 1。"
+  },
+  {
+    "id": 48,
+    "category": "GoFrame",
+    "difficulty": 1,
+    "title": "GoFrame 脚手架工具 gf 的主要功能是？",
+    "options": [
+      "仅用于编译项目",
+      "项目初始化、代码生成（dao/model/service/ctrl）、热编译、构建等一体化工具",
+      "只是一个包管理器",
+      "只用来生成 swagger 文档"
+    ],
+    "answer": 1,
+    "explain": "gf cli（gf-cli/gf）是 GoFrame 的官方脚手架：gf init 初始化项目，gf gen dao 生成 DAO，gf gen service 生成服务层，gf run 热编译运行，gf build 跨平台构建等。"
+  },
+  {
+    "id": 49,
+    "category": "GoFrame",
+    "difficulty": 1,
+    "title": "GoFrame 中 `g` 包的作用是？",
+    "options": [
+      "是 glog 的简称",
+      "是框架最常用对象的集合入口，如 g.Server()/g.DB()/g.Redis()/g.Cfg()/g.Log() 等",
+      "是一个泛型工具包",
+      "是 gRPC 客户端"
+    ],
+    "answer": 1,
+    "explain": "g 包是 GoFrame 的 \"便捷对象 coupling 层\"，通过单例方式获取 HTTP Server、数据库、Redis、配置、日志等，避免手动管理组件实例。"
+  },
+  {
+    "id": 50,
+    "category": "GoFrame",
+    "difficulty": 1,
+    "title": "在 GoFrame 中创建 HTTP Server 的标准方式是？",
+    "options": [
+      "http.NewServeMux()",
+      "gin.Default()",
+      "g.Server() 然后 s.Run()",
+      "gf.New()"
+    ],
+    "answer": 2,
+    "explain": "GoFrame 的 HTTP 服务通过 g.Server() 获取单例 *ghttp.Server，随后通过 BindHandler/BindObject/Group 注册路由，最后 s.Run() 启动。"
+  },
+  {
+    "id": 51,
+    "category": "GoFrame",
+    "difficulty": 2,
+    "title": "GoFrame 规范路由（Standard Route）中 Req/Res 结构体的 tag 常见约定是？",
+    "options": [
+      "使用 json tag 定义接口路径",
+      "使用 `path:\"/user\" method:\"post\"` 等 tag 定义路由，字段 tag 用于参数/校验/文档",
+      "必须用 swag 注释",
+      "路由只能写在 main.go"
+    ],
+    "answer": 1,
+    "explain": "规范路由通过在 Req 结构体嵌入 g.Meta 并写 tag：`path:\"/xxx\" method:\"post\" tags:\"x\" summary:\"y\"`，字段再通过 v（valid）/d（default）/in（位置）等 tag 表达参数、默认值、校验和 openapi 文档。"
+  },
+  {
+    "id": 52,
+    "category": "GoFrame",
+    "difficulty": 2,
+    "title": "关于 GoFrame 的数据校验（gvalid），下列说法错误的是？",
+    "options": [
+      "可以在 struct 字段上通过 v 标签声明规则，如 v:\"required|email\"",
+      "规范路由会在进入 Controller 前自动校验 Req",
+      "校验失败默认会被框架统一拦截并返回错误",
+      "gvalid 只能用于 HTTP 参数，不支持独立调用"
+    ],
+    "answer": 3,
+    "explain": "gvalid 是独立模块，既能自动校验 HTTP Req，也可以通过 g.Validator().Data(obj).Run(ctx) 直接在业务中使用。"
+  },
+  {
+    "id": 53,
+    "category": "GoFrame",
+    "difficulty": 2,
+    "title": "GoFrame 的中间件注册方式中，下列哪个是正确的？",
+    "options": [
+      "s.Use(middleware)",
+      "s.BindMiddleware(\"/api/*\", middleware)",
+      "在路由分组 group.Middleware(mw) 内注册，对该组所有路由生效",
+      "所有选项都正确"
+    ],
+    "answer": 3,
+    "explain": "ghttp 支持多种中间件绑定：全局 BindMiddlewareDefault，模式绑定 BindMiddleware，分组内 group.Middleware；这三种方式在不同场景下都常用。"
+  },
+  {
+    "id": 54,
+    "category": "GoFrame",
+    "difficulty": 1,
+    "title": "GoFrame 推荐的工程目录（工程模板）中，业务逻辑一般放在？",
+    "options": [
+      "controller/",
+      "logic/ 或 service/",
+      "dao/",
+      "model/"
+    ],
+    "answer": 1,
+    "explain": "GoFrame 标准工程中：controller 仅负责接收请求参数并调用 service；真正的业务逻辑在 logic（实现）/service（接口）；dao 负责数据库访问；model 定义实体与 DTO。"
+  },
+  {
+    "id": 55,
+    "category": "GoFrame",
+    "difficulty": 2,
+    "title": "`gf gen dao` 生成的代码通常包含哪些文件？",
+    "options": [
+      "只生成 dao.go",
+      "dao（操作方法）、model（实体 entity 和 do）、do（用于链式 where/update 的输入结构）",
+      "只生成 SQL 文件",
+      "生成前端 TypeScript 类型"
+    ],
+    "answer": 1,
+    "explain": "gf gen dao 根据数据库结构生成 DAO + model/entity + model/do。entity 对应表的完整行，do 用于作为链式操作的输入（所有字段都是 interface{}，便于条件构建）。"
+  },
+  {
+    "id": 56,
+    "category": "GoFrame",
+    "difficulty": 2,
+    "title": "GoFrame 的 gdb（数据库组件）下列描述正确的是？",
+    "options": [
+      "只支持 MySQL",
+      "支持链式操作（ORM）和原生 SQL，支持多库多驱动（MySQL/PostgreSQL/SQLite/MSSQL/Oracle 等）",
+      "不支持事务",
+      "不支持连接池"
+    ],
+    "answer": 1,
+    "explain": "gdb 是 GoFrame 的数据库抽象层，内置多驱动、连接池、事务、链式 ORM、软删除、多库路由、调试日志、SQL 预处理等能力。"
+  },
+  {
+    "id": 57,
+    "category": "GoFrame",
+    "difficulty": 2,
+    "title": "GoFrame 中使用 gdb 执行事务的推荐方式是？",
+    "options": [
+      "手动 Begin/Commit/Rollback",
+      "db.Transaction(ctx, func(ctx, tx) error { ... }) 闭包自动提交/回滚",
+      "使用 panic 让框架回滚",
+      "GoFrame 不支持事务"
+    ],
+    "answer": 1,
+    "explain": "db.Transaction 接收 ctx 和函数闭包：闭包返回 nil 自动 Commit，返回 err 或 panic 自动 Rollback，避免了手动管理事务的泄漏风险，是首选写法。"
+  },
+  {
+    "id": 58,
+    "category": "GoFrame",
+    "difficulty": 2,
+    "title": "在 GoFrame 中获取配置的标准方式是？",
+    "options": [
+      "os.Getenv",
+      "直接 import 配置文件",
+      "g.Cfg().MustGet(ctx, \"server.address\")",
+      "viper.Get"
+    ],
+    "answer": 2,
+    "explain": "g.Cfg() 返回单例配置对象，默认读取 manifest/config/config.yaml 等；支持多种格式（yaml/toml/json/ini/xml）和多种来源（文件/远程/自定义 adapter），通过 ctx 支持命名配置分组。"
+  },
+  {
+    "id": 59,
+    "category": "GoFrame",
+    "difficulty": 1,
+    "title": "GoFrame 中打印日志的推荐方式是？",
+    "options": [
+      "fmt.Println",
+      "log.Println",
+      "g.Log().Info(ctx, \"msg\")",
+      "print"
+    ],
+    "answer": 2,
+    "explain": "g.Log() 返回 glog 单例，支持级别、链路追踪 traceID、文件切割、异步、多输出目标；必须传 ctx 才能在日志中自动带上 traceID 方便链路追踪。"
+  },
+  {
+    "id": 60,
+    "category": "GoFrame",
+    "difficulty": 2,
+    "title": "GoFrame 中 ctx 的重要作用，下列说法错误的是？",
+    "options": [
+      "承载 traceID，用于全链路追踪",
+      "承载请求级别的变量（g.RequestFromCtx 可取 *ghttp.Request）",
+      "关联数据库链路、日志、事务",
+      "ctx 在 GoFrame 中可选，通常可以传 nil"
+    ],
+    "answer": 3,
+    "explain": "GoFrame 强依赖 ctx 做链路追踪与上下文传递，几乎所有 API（g.Log()、db.Ctx()、g.Cfg() 等）都要求传 ctx，禁止传 nil，否则会丢失 traceID 与链路信息。"
+  },
+  {
+    "id": 61,
+    "category": "GoFrame",
+    "difficulty": 2,
+    "title": "GoFrame 规范路由中统一错误返回的最佳实践是？",
+    "options": [
+      "在每个 Controller 手写 if err != nil { return ... }",
+      "使用 gerror.New/Wrap/WrapCode 抛出错误，中间件 MiddlewareHandlerResponse 统一格式返回",
+      "用 panic 直接中断",
+      "用标准库 errors"
+    ],
+    "answer": 1,
+    "explain": "GoFrame 推荐用 gerror 创建带 code/stack 的错误，在全局中间件（如 ghttp.MiddlewareHandlerResponse）里统一格式化 {code, message, data}，让 Controller 简洁一致。"
+  },
+  {
+    "id": 62,
+    "category": "GoFrame",
+    "difficulty": 2,
+    "title": "关于 gcache，下列说法错误的是？",
+    "options": [
+      "内置内存适配器，也可切换为 Redis 适配器",
+      "支持设置过期时间",
+      "支持 LRU 淘汰",
+      "跨进程自动共享缓存"
+    ],
+    "answer": 3,
+    "explain": "gcache 默认内存适配器是进程内的，跨进程不会自动共享；需要分布式缓存时应切换到 Redis 适配器（gcache.NewAdapterRedis）或直接使用 gredis。"
+  },
+  {
+    "id": 63,
+    "category": "GoFrame",
+    "difficulty": 2,
+    "title": "使用 GoFrame 生成 OpenAPI/Swagger 文档，通常依赖？",
+    "options": [
+      "必须额外安装 swaggo",
+      "规范路由 + g.Meta/字段 tag，框架自动生成 OpenAPIv3，/api.json 与 /swagger 开箱即用",
+      "需要手写 openapi.yaml",
+      "不支持"
+    ],
+    "answer": 1,
+    "explain": "GoFrame 原生支持根据规范路由生成 OpenAPIv3 JSON，默认路径 /api.json，可通过 s.SetOpenApiPath 与 s.SetSwaggerPath 配置，无需额外注释工具。"
+  },
+  {
+    "id": 64,
+    "category": "GoFrame",
+    "difficulty": 2,
+    "title": "关于 GoFrame 与 Gin 的主要区别，下列哪个描述最贴切？",
+    "options": [
+      "两者完全等价，只是风格不同",
+      "Gin 是轻量路由 + 中间件；GoFrame 是一体化企业级框架，自带 ORM/配置/日志/缓存/校验/工程规范等",
+      "GoFrame 只是封装了 Gin",
+      "Gin 性能比 GoFrame 高一个数量级"
+    ],
+    "answer": 1,
+    "explain": "Gin 专注于 HTTP 路由，其它组件需要自行选择整合；GoFrame 是 batteries-included 的企业级框架，提供配置、日志、ORM、缓存、校验、队列、定时、工程模板等一整套能力。"
+  },
+  {
+    "id": 65,
+    "category": "GoFrame",
+    "difficulty": 3,
+    "title": "在 GoFrame 规范路由中，Controller 方法的签名通常是？",
+    "options": [
+      "func(*ghttp.Request)",
+      "func(ctx context.Context, req *XxxReq) (res *XxxRes, err error)",
+      "func() error",
+      "func(c *gin.Context)"
+    ],
+    "answer": 1,
+    "explain": "规范路由要求 Controller 方法必须为 func(ctx, *Req) (*Res, error) 形式；框架会自动绑定路由、解析参数、做校验，并通过中间件统一格式化响应，省去样板代码。"
+  },
+  {
+    "id": 66,
+    "category": "strings",
+    "difficulty": 1,
+    "title": "strings.Contains 和 strings.Index 的关系是？",
+    "options": [
+      "Contains 内部调用了 Index，Index >= 0 即包含",
+      "Index 内部调用了 Contains",
+      "两者完全独立实现",
+      "Contains 比 Index 慢很多"
+    ],
+    "answer": 0,
+    "explain": "strings.Contains(s, substr) 等价于 strings.Index(s, substr) >= 0。Contains 就是对 Index 的封装，语义更直观。"
+  },
+  {
+    "id": 67,
+    "category": "strings",
+    "difficulty": 1,
+    "title": "strings.Fields 和 strings.Split 的区别是？",
+    "options": [
+      "没有区别",
+      "Fields 按所有空白字符分割并自动忽略空串；Split 按指定分隔符精确分割",
+      "Split 更快",
+      "Fields 只能处理英文"
+    ],
+    "answer": 1,
+    "explain": "Fields 按 unicode.IsSpace（空格/换行/制表等）分割且自动去掉空串；Split 严格按给定分隔符切割，可能产生空串。处理用户输入推荐 Fields。"
+  },
+  {
+    "id": 68,
+    "category": "strings",
+    "difficulty": 2,
+    "title": "以下代码输出？",
+    "code": "s := \"go:frame:work\"\nfmt.Println(strings.SplitN(s, \":\", 2))",
+    "options": [
+      "[go frame work]",
+      "[go frame:work]",
+      "[go:frame work]",
+      "[go:frame:work]"
+    ],
+    "answer": 1,
+    "explain": "SplitN(s, sep, n) 最多分 n 段。n=2 时在第一个 ':' 处切一刀，得到 [\"go\", \"frame:work\"]。"
+  },
+  {
+    "id": 69,
+    "category": "strings",
+    "difficulty": 2,
+    "title": "strings.Cut 的返回值是？",
+    "code": "before, after, found := strings.Cut(\"user:admin:123\", \":\")",
+    "options": [
+      "before=\"user\" after=\"admin:123\" found=true",
+      "before=\"user\" after=\"admin\" found=true",
+      "before=\"user:admin\" after=\"123\" found=true",
+      "before=\"user:admin:123\" after=\"\" found=false"
+    ],
+    "answer": 0,
+    "explain": "Cut 在第一个 sep 处切一刀，返回 before（sep 左侧）和 after（sep 右侧全部），以及 found。类似 SplitN(s, sep, 2) 但更优雅。"
+  },
+  {
+    "id": 70,
+    "category": "strings",
+    "difficulty": 2,
+    "title": "高效拼接大量字符串，以下哪种方式性能最好？",
+    "options": [
+      "反复使用 s += str",
+      "使用 fmt.Sprintf 拼接",
+      "使用 strings.Builder",
+      "使用 strings.Join"
+    ],
+    "answer": 2,
+    "explain": "strings.Builder 内部维护 []byte 缓冲区，避免每次拼接都分配新字符串。Join 也高效但需预先有 []string。+= 在循环中 O(n²)，性能最差。"
+  },
+  {
+    "id": 71,
+    "category": "strings",
+    "difficulty": 2,
+    "title": "以下代码输出？",
+    "code": "r := strings.NewReplacer(\"<\", \"&lt;\", \">\", \"&gt;\")\nfmt.Println(r.Replace(\"<div>hello</div>\"))",
+    "options": [
+      "<div>hello</div>",
+      "&lt;div&gt;hello&lt;/div&gt;",
+      "divhellodiv",
+      "编译错误"
+    ],
+    "answer": 1,
+    "explain": "strings.NewReplacer 接受成对的 old/new 参数，Replace 时并行替换所有匹配。适合 HTML 转义、模板变量替换等场景。"
+  },
+  {
+    "id": 72,
+    "category": "strings",
+    "difficulty": 1,
+    "title": "strings.TrimSpace 和 strings.Trim 的区别是？",
+    "options": [
+      "没有区别",
+      "TrimSpace 去除首尾所有空白字符；Trim 去除首尾指定字符集合中的字符",
+      "Trim 只去除空格",
+      "TrimSpace 只去除换行符"
+    ],
+    "answer": 1,
+    "explain": "TrimSpace 去除 \\t\\n\\r 和空格等所有 Unicode 空白；Trim(s, cutset) 去除首尾属于 cutset 中的任一字符，如 Trim(\"!!hello!!\", \"!\") → \"hello\"。"
+  },
+  {
+    "id": 73,
+    "category": "strconv",
+    "difficulty": 1,
+    "title": "strconv.Atoi 和 strconv.Itoa 分别做什么？",
+    "options": [
+      "Atoi: int→string, Itoa: string→int",
+      "Atoi: string→int, Itoa: int→string",
+      "两者都是 string→int",
+      "两者功能相同"
+    ],
+    "answer": 1,
+    "explain": "Atoi = ASCII to Integer（字符串→int），Itoa = Integer to ASCII（int→字符串）。这是 C 语言命名传统。"
+  },
+  {
+    "id": 74,
+    "category": "strconv",
+    "difficulty": 2,
+    "title": "strconv.ParseInt 的第二、三个参数含义是？",
+    "code": "n, _ := strconv.ParseInt(\"ff\", 16, 32)",
+    "options": [
+      "base=16（十六进制），bitSize=32（结果可放入 int32）",
+      "base=16（精度），bitSize=32（进制）",
+      "base=16（最大值），bitSize=32（最小值）",
+      "两个参数没有实际含义"
+    ],
+    "answer": 0,
+    "explain": "base 指定进制（2-36，0=自动检测前缀），bitSize 指定结果的位宽限制（0/8/16/32/64），超出范围返回 ErrRange。返回值始终是 int64。"
+  },
+  {
+    "id": 75,
+    "category": "strconv",
+    "difficulty": 2,
+    "title": "以下代码输出？",
+    "code": "fmt.Println(strconv.FormatFloat(3.14159, 'f', 2, 64))",
+    "options": [
+      "3.14",
+      "3.14159",
+      "3.1",
+      "3.141590"
+    ],
+    "answer": 0,
+    "explain": "FormatFloat 参数：f 格式（小数）、prec=2（保留2位小数）、bitSize=64（float64）。输出 \"3.14\"。常用格式还有 'e'（科学计数）、'g'（自动选择）。"
+  },
+  {
+    "id": 76,
+    "category": "strconv",
+    "difficulty": 1,
+    "title": "strconv.Atoi 转换失败时会？",
+    "code": "n, err := strconv.Atoi(\"abc\")",
+    "options": [
+      "n=0, err=nil",
+      "panic",
+      "n=0, err 为 *NumError 类型的错误",
+      "n=-1, err=nil"
+    ],
+    "answer": 2,
+    "explain": "Atoi 转换失败返回 0 和 *strconv.NumError 错误（含 Func/Num/Err 字段）。Go 不会 panic，必须检查 err。"
+  },
+  {
+    "id": 77,
+    "category": "slices",
+    "difficulty": 1,
+    "title": "slices.Contains 和手动循环查找的区别是？",
+    "options": [
+      "slices.Contains 使用二分查找，更快",
+      "slices.Contains 是线性查找，只是写法更简洁",
+      "手动循环更简洁",
+      "slices.Contains 只支持 int 类型"
+    ],
+    "answer": 1,
+    "explain": "slices.Contains 是泛型函数，内部也是 O(n) 线性扫描，只是代码更简洁。需要 O(log n) 应使用 slices.BinarySearch（需先排序）。"
+  },
+  {
+    "id": 78,
+    "category": "slices",
+    "difficulty": 2,
+    "title": "slices.Sort 和 sort.Slice 的区别是？",
+    "options": [
+      "完全相同",
+      "slices.Sort 使用泛型+pattern-defeating quicksort，通常更快；sort.Slice 基于接口和反射",
+      "sort.Slice 更快",
+      "slices.Sort 只能排 int"
+    ],
+    "answer": 1,
+    "explain": "slices.Sort（Go 1.21+）使用泛型约束，编译期确定类型，无接口开销，内部用 pdqsort。sort.Slice 需要 reflect，有运行时开销。新代码推荐 slices.Sort/SortFunc。"
+  },
+  {
+    "id": 79,
+    "category": "slices",
+    "difficulty": 2,
+    "title": "slices.Delete(s, 1, 3) 的行为是？",
+    "code": "s := []int{10, 20, 30, 40, 50}\ns = slices.Delete(s, 1, 3)\nfmt.Println(s)",
+    "options": [
+      "[10 40 50]",
+      "[10 30 40 50]",
+      "[10 20 40 50]",
+      "[20 30]"
+    ],
+    "answer": 0,
+    "explain": "slices.Delete(s, i, j) 删除 s[i:j]，即下标 1 和 2 的元素（20, 30）。结果为 [10, 40, 50]。注意返回值是修改后的切片，原切片底层可能被改。"
+  },
+  {
+    "id": 80,
+    "category": "slices",
+    "difficulty": 2,
+    "title": "slices.Compact 的作用是？",
+    "code": "s := []int{1, 1, 2, 2, 2, 3, 1}\nfmt.Println(slices.Compact(s))",
+    "options": [
+      "[1 2 3]",
+      "[1 2 3 1]",
+      "[1 2 3 1 1 2 2]",
+      "panic"
+    ],
+    "answer": 1,
+    "explain": "Compact 只去除**相邻**重复元素，不是全局去重。末尾的 1 和开头的 1 不相邻，所以保留。要全局去重需先排序再 Compact，或用 map。"
+  },
+  {
+    "id": 81,
+    "category": "slices",
+    "difficulty": 2,
+    "title": "slices.Clone 的特性是？",
+    "options": [
+      "深拷贝，修改克隆不影响原切片的任何内容",
+      "浅拷贝：创建新的底层数组，复制元素值；但如果元素是指针/引用类型，指向的对象仍共享",
+      "和赋值（b := a）完全相同",
+      "只复制切片 header，共享底层数组"
+    ],
+    "answer": 1,
+    "explain": "Clone 等价于 append([]T(nil), s...)，分配新底层数组并复制值。对于 []int 等值类型元素是完全独立的。但若元素是 *T 或含引用类型，指向的对象仍共享。"
+  },
+  {
+    "id": 82,
+    "category": "maps",
+    "difficulty": 1,
+    "title": "maps.Clone 的行为是？",
+    "options": [
+      "深拷贝，包括值的递归复制",
+      "浅拷贝，创建新 map 并复制键值对；值是引用类型时仍共享",
+      "返回原 map 的引用",
+      "只能用于 map[string]string"
+    ],
+    "answer": 1,
+    "explain": "maps.Clone 创建新 map 并遍历复制所有键值对。是浅拷贝：如果 value 是指针/切片/map 等引用类型，克隆后仍共享底层数据。"
+  },
+  {
+    "id": 83,
+    "category": "maps",
+    "difficulty": 2,
+    "title": "maps.Copy(dst, src) 的行为是？",
+    "options": [
+      "清空 dst 后复制 src",
+      "将 src 的键值对合并到 dst，同名 key 用 src 的值覆盖",
+      "返回一个新 map",
+      "只在 dst 为空时有效"
+    ],
+    "answer": 1,
+    "explain": "maps.Copy 将 src 中的所有键值对复制到 dst，如果 dst 已有相同 key 则被 src 覆盖。dst 原有的不在 src 中的 key 保持不变。"
+  },
+  {
+    "id": 84,
+    "category": "maps",
+    "difficulty": 2,
+    "title": "maps.DeleteFunc 的作用是？",
+    "code": "m := map[string]int{\"a\": 1, \"b\": 5, \"c\": 3}\nmaps.DeleteFunc(m, func(k string, v int) bool {\n    return v > 2\n})\nfmt.Println(m)",
+    "options": [
+      "map[a:1 b:5 c:3]",
+      "map[a:1]",
+      "map[b:5 c:3]",
+      "map[]"
+    ],
+    "answer": 1,
+    "explain": "DeleteFunc 删除满足条件（v > 2）的键值对，即 b:5 和 c:3 被删除，只剩 a:1。原地修改，无返回值。"
+  },
+  {
+    "id": 85,
+    "category": "maps",
+    "difficulty": 2,
+    "title": "Go 1.23 中 maps.Keys 返回什么？",
+    "options": [
+      "[]K 切片",
+      "iter.Seq[K] 迭代器，需配合 slices.Collect 转为切片",
+      "chan K",
+      "map[K]bool"
+    ],
+    "answer": 1,
+    "explain": "Go 1.23 起 maps.Keys/Values 返回迭代器 iter.Seq[K]/iter.Seq[V]。要得到切片需 slices.Collect(maps.Keys(m))。这是 Go 迭代器提案的一部分。"
+  },
+  {
+    "id": 86,
+    "category": "sort",
+    "difficulty": 1,
+    "title": "sort.Slice 的第二个参数 less 的含义是？",
+    "options": [
+      "比较两个元素是否相等",
+      "less(i, j) 返回 true 表示 s[i] 应排在 s[j] 前面",
+      "less(i, j) 返回 s[i] 和 s[j] 的差值",
+      "less 是可选参数"
+    ],
+    "answer": 1,
+    "explain": "sort.Slice(s, less) 中 less(i, j) bool 定义排序标准：返回 true 则 s[i] 排在 s[j] 前面。升序：return s[i] < s[j]，降序：return s[i] > s[j]。"
+  },
+  {
+    "id": 87,
+    "category": "sort",
+    "difficulty": 2,
+    "title": "sort.SliceStable 和 sort.Slice 的区别是？",
+    "options": [
+      "没有区别",
+      "SliceStable 是稳定排序，相等元素保持原始顺序；Slice 不保证",
+      "SliceStable 更快",
+      "Slice 是稳定排序"
+    ],
+    "answer": 1,
+    "explain": "稳定排序保证相等元素的相对顺序不变。当按某字段排序但希望相同值的元素保持原始顺序时（如先按分数排，同分保持原名次），用 SliceStable。"
+  },
+  {
+    "id": 88,
+    "category": "sort",
+    "difficulty": 2,
+    "title": "sort.Search 的用法和返回值是？",
+    "code": "s := []int{1, 3, 5, 7, 9}\nidx := sort.Search(len(s), func(i int) bool {\n    return s[i] >= 6\n})",
+    "options": [
+      "idx=3（第一个 >= 6 的元素下标）",
+      "idx=2",
+      "idx=5",
+      "idx=-1（未找到）"
+    ],
+    "answer": 0,
+    "explain": "sort.Search 用二分法找到满足 f(i)==true 的最小下标。s[3]=7 是第一个 >= 6 的元素，所以返回 3。若都不满足则返回 len(s)。"
+  },
+  {
+    "id": 89,
+    "category": "fmt",
+    "difficulty": 1,
+    "title": "fmt.Sprintf 和 fmt.Printf 的区别是？",
+    "options": [
+      "Sprintf 返回格式化后的字符串；Printf 直接输出到标准输出",
+      "Printf 返回字符串",
+      "两者完全相同",
+      "Sprintf 只能用 %s"
+    ],
+    "answer": 0,
+    "explain": "Sprintf 返回 string（不输出），Printf 直接写到 stdout。Fprintf 写到指定 io.Writer。这三者格式化能力完全相同。"
+  },
+  {
+    "id": 90,
+    "category": "fmt",
+    "difficulty": 2,
+    "title": "以下格式化动词对应什么？",
+    "code": "fmt.Sprintf(\"%v %+v %#v\", s, s, s)",
+    "options": [
+      "%v 默认格式，%+v 带字段名（struct），%#v Go 语法表示",
+      "三者完全相同",
+      "%v 十进制，%+v 十六进制，%#v 八进制",
+      "%v 字符串，%+v 整数，%#v 浮点"
+    ],
+    "answer": 0,
+    "explain": "%v 是默认格式（如 {Alice 30}）；%+v 对 struct 加字段名（如 {Name:Alice Age:30}）；%#v 输出 Go 语法表示（如 main.Person{Name:\"Alice\", Age:30}），调试非常有用。"
+  },
+  {
+    "id": 91,
+    "category": "fmt",
+    "difficulty": 2,
+    "title": "fmt.Errorf 中 %w 和 %v 包装错误的区别是？",
+    "options": [
+      "没有区别",
+      "%w 保留错误链（可用 errors.Is/As 穿透）；%v 只拼接字符串，丢失原错误",
+      "%v 保留错误链",
+      "%w 性能更差应避免使用"
+    ],
+    "answer": 1,
+    "explain": "%w 会让返回的 error 实现 Unwrap() 方法，保持错误链完整。%v/%s 只把 err.Error() 拼入字符串，errors.Is/As 无法穿透找到原始错误。"
+  },
+  {
+    "id": 92,
+    "category": "json",
+    "difficulty": 1,
+    "title": "encoding/json 中 Marshal 和 Unmarshal 的作用是？",
+    "options": [
+      "Marshal: JSON→Go, Unmarshal: Go→JSON",
+      "Marshal: Go→JSON 字节, Unmarshal: JSON 字节→Go",
+      "两者都是解析 JSON",
+      "两者都是生成 JSON"
+    ],
+    "answer": 1,
+    "explain": "json.Marshal(v) 将 Go 值编码为 []byte JSON；json.Unmarshal(data, &v) 将 JSON []byte 解码到 Go 变量中。"
+  },
+  {
+    "id": 93,
+    "category": "json",
+    "difficulty": 2,
+    "title": "关于 json 标签 `json:\"name,omitempty\"`，下列说法正确的是？",
+    "options": [
+      "omitempty 表示该字段必须存在",
+      "omitempty 表示零值时不输出到 JSON（空串/0/false/nil/空切片/空map）",
+      "omitempty 只对 string 有效",
+      "name 是 Go 字段名"
+    ],
+    "answer": 1,
+    "explain": "omitempty 让 Marshal 在字段为零值时省略该字段。\"name\" 指定 JSON 中的 key 名。用 `json:\"-\"` 则完全忽略该字段。"
+  },
+  {
+    "id": 94,
+    "category": "json",
+    "difficulty": 2,
+    "title": "json.NewDecoder 和 json.Unmarshal 的区别是？",
+    "options": [
+      "完全相同",
+      "Decoder 从 io.Reader 流式解码（适合 HTTP Body/文件）；Unmarshal 一次性解码 []byte",
+      "Unmarshal 更慢",
+      "Decoder 不支持 struct"
+    ],
+    "answer": 1,
+    "explain": "json.NewDecoder(r).Decode(&v) 适合从流（http.Request.Body/文件等）解码，不需要先 ReadAll 到内存。Unmarshal 需要完整 []byte。大数据推荐 Decoder。"
+  },
+  {
+    "id": 95,
+    "category": "json",
+    "difficulty": 2,
+    "title": "nil 切片和空切片 JSON 序列化的结果是？",
+    "code": "var a []int       // nil\nb := []int{}      // 空\nfmt.Println(string(json.Marshal(a)))\nfmt.Println(string(json.Marshal(b)))",
+    "options": [
+      "都是 []",
+      "都是 null",
+      "a → null, b → []",
+      "a → [], b → null"
+    ],
+    "answer": 2,
+    "explain": "encoding/json 将 nil 切片编码为 \"null\"，空切片编码为 \"[]\"。如果 API 要求返回空数组而非 null，必须初始化为 []int{} 或 make([]int, 0)。"
+  },
+  {
+    "id": 96,
+    "category": "time",
+    "difficulty": 1,
+    "title": "Go 的时间格式化为什么用 \"2006-01-02 15:04:05\"？",
+    "options": [
+      "这是 Go 团队成立日期",
+      "这是参考时间（reference time），每个数字对应固定含义：1=月 2=日 3=12时 15=24时 4=分 5=秒 06=年",
+      "随便选的日期",
+      "只能用这一种格式"
+    ],
+    "answer": 1,
+    "explain": "Go 用 Mon Jan 2 15:04:05 MST 2006（即 01/02 03:04:05PM '06 -0700）作为参考模板。每个位置的数字是固定的助记符，不是随意选择的。"
+  },
+  {
+    "id": 97,
+    "category": "time",
+    "difficulty": 2,
+    "title": "time.After 在 select 中使用需注意什么？",
+    "options": [
+      "没有特别注意事项",
+      "每次调用 time.After 都创建新 Timer；在循环 select 中会导致 Timer 泄露，应改用 time.NewTimer + Reset",
+      "time.After 比 time.Sleep 慢",
+      "time.After 会阻塞当前 goroutine"
+    ],
+    "answer": 1,
+    "explain": "time.After 返回 <-chan Time，底层创建 Timer。在 for-select 中每次迭代都创建新 Timer，旧的直到超时才被 GC。长期循环应用 NewTimer + Reset 复用。"
+  },
+  {
+    "id": 98,
+    "category": "time",
+    "difficulty": 2,
+    "title": "time.Duration 的基本单位是？",
+    "options": [
+      "毫秒",
+      "秒",
+      "纳秒",
+      "微秒"
+    ],
+    "answer": 2,
+    "explain": "time.Duration 的底层类型是 int64，单位为纳秒。time.Second = 1e9 纳秒。常用常量：time.Millisecond、time.Second、time.Minute、time.Hour。"
+  },
+  {
+    "id": 99,
+    "category": "time",
+    "difficulty": 2,
+    "title": "以下代码输出格式正确的是？",
+    "code": "t := time.Now()\nfmt.Println(t.Format(\"2006/01/02\"))",
+    "options": [
+      "2026/04/28（当前日期）",
+      "2006/01/02（原样输出）",
+      "编译错误",
+      "随机日期"
+    ],
+    "answer": 0,
+    "explain": "Format 中的 2006、01、02 是占位符，会被替换为实际的年、月、日。输出为当前日期如 2026/04/28。"
+  },
+  {
+    "id": 100,
+    "category": "os/io",
+    "difficulty": 1,
+    "title": "os.ReadFile 和 os.Open+Read 的区别是？",
+    "options": [
+      "没有区别",
+      "ReadFile 一次性读取整个文件到 []byte；Open 返回 *File 可逐步读取",
+      "Open 更简单",
+      "ReadFile 只能读文本文件"
+    ],
+    "answer": 1,
+    "explain": "os.ReadFile(name) 是便捷函数，一步到位读取整个文件内容。os.Open 返回 *File 对象，适合大文件逐行/逐块读取，用完需 Close。"
+  },
+  {
+    "id": 101,
+    "category": "os/io",
+    "difficulty": 2,
+    "title": "os.WriteFile 的第三个参数 perm 的含义是？",
+    "code": "os.WriteFile(\"test.txt\", []byte(\"hello\"), 0644)",
+    "options": [
+      "文件大小限制",
+      "Unix 文件权限：0644 表示 owner 读写，group/other 只读",
+      "编码格式",
+      "写入模式（追加/覆盖）"
+    ],
+    "answer": 1,
+    "explain": "0644 是八进制的 Unix 权限位：6=rw-（owner 读写），4=r--（group 只读），4=r--（other 只读）。WriteFile 默认覆盖写入，不存在则创建。"
+  },
+  {
+    "id": 102,
+    "category": "os/io",
+    "difficulty": 2,
+    "title": "以下哪个是逐行读取文件的推荐方式？",
+    "options": [
+      "ioutil.ReadAll 后 Split",
+      "bufio.NewScanner(file) + for scanner.Scan()",
+      "os.ReadFile 后 Split",
+      "io.ReadAll 后按换行符遍历"
+    ],
+    "answer": 1,
+    "explain": "bufio.Scanner 是逐行读取的标准方式，内存友好（不需要整个文件载入内存），适合大文件。默认按行扫描，也可自定义 Split 函数。"
+  },
+  {
+    "id": 103,
+    "category": "os/io",
+    "difficulty": 2,
+    "title": "filepath.Join 和直接拼接路径字符串的区别是？",
+    "options": [
+      "没有区别",
+      "Join 自动处理路径分隔符、清理多余斜杠和 ./ ../ ，跨平台安全",
+      "直接拼接更安全",
+      "Join 只能拼接两个路径"
+    ],
+    "answer": 1,
+    "explain": "filepath.Join 自动用当前操作系统的分隔符，清理冗余（如 a//b → a/b，a/./b → a/b），是构建路径的最佳实践。手动拼接容易出错，尤其跨平台。"
+  },
+  {
+    "id": 104,
+    "category": "net/http",
+    "difficulty": 1,
+    "title": "用标准库启动一个最简 HTTP 服务器的写法是？",
+    "options": [
+      "net.Listen + Accept",
+      "http.HandleFunc(\"/\", handler) + http.ListenAndServe(\":8080\", nil)",
+      "http.NewServer().Run()",
+      "httpServer.Start()"
+    ],
+    "answer": 1,
+    "explain": "http.HandleFunc 注册路由到 DefaultServeMux，http.ListenAndServe 启动监听。传 nil 使用 DefaultServeMux。这是最简单的标准库 HTTP 服务器。"
+  },
+  {
+    "id": 105,
+    "category": "net/http",
+    "difficulty": 2,
+    "title": "http.Get 返回的 resp.Body 需要注意什么？",
+    "options": [
+      "无需额外处理",
+      "必须 defer resp.Body.Close()，否则 TCP 连接无法复用导致泄露",
+      "Body 会自动关闭",
+      "Body 只能读取一次且自动关闭"
+    ],
+    "answer": 1,
+    "explain": "resp.Body 是 io.ReadCloser，必须显式 Close。未关闭的 Body 会导致底层 TCP 连接无法回到连接池，长期运行最终耗尽 fd。标准写法：defer resp.Body.Close()。"
+  },
+  {
+    "id": 106,
+    "category": "net/http",
+    "difficulty": 2,
+    "title": "http.Handler 接口的定义是？",
+    "options": [
+      "type Handler interface { Handle(w, r) }",
+      "type Handler interface { ServeHTTP(ResponseWriter, *Request) }",
+      "type Handler interface { Run() error }",
+      "type Handler func(w, r)"
+    ],
+    "answer": 1,
+    "explain": "http.Handler 接口只有一个方法 ServeHTTP(w http.ResponseWriter, r *http.Request)。http.HandlerFunc 是适配器，让普通函数也能满足 Handler 接口。"
+  },
+  {
+    "id": 107,
+    "category": "regexp",
+    "difficulty": 2,
+    "title": "regexp.MustCompile 和 regexp.Compile 的区别是？",
+    "options": [
+      "没有区别",
+      "MustCompile 编译失败直接 panic；Compile 返回 error 需手动处理",
+      "MustCompile 更慢",
+      "Compile 不支持分组"
+    ],
+    "answer": 1,
+    "explain": "MustCompile 适合编译时已知的正则（如全局变量初始化），失败即 panic。Compile 返回 (*Regexp, error)，适合动态/用户输入的正则。"
+  },
+  {
+    "id": 108,
+    "category": "regexp",
+    "difficulty": 2,
+    "title": "以下代码输出？",
+    "code": "re := regexp.MustCompile(`(\\d+)-(\\w+)`)\nmatches := re.FindStringSubmatch(\"order-123-abc\")\nfmt.Println(matches)",
+    "options": [
+      "[123-abc 123 abc]",
+      "[order-123-abc 123 abc]",
+      "[123 abc]",
+      "nil"
+    ],
+    "answer": 0,
+    "explain": "FindStringSubmatch 返回第一个匹配：[完整匹配, 分组1, 分组2, ...]。匹配 \"123-abc\"，分组1=123，分组2=abc。结果 [\"123-abc\", \"123\", \"abc\"]。"
+  },
+  {
+    "id": 109,
+    "category": "sync",
+    "difficulty": 2,
+    "title": "sync.Map 适用于什么场景？",
+    "options": [
+      "所有需要并发 map 的场景",
+      "键集合稳定（多读少写）或各 goroutine 访问不同 key 的场景",
+      "高频全量遍历的场景",
+      "只有一个 goroutine 使用的场景"
+    ],
+    "answer": 1,
+    "explain": "sync.Map 为两种场景优化：1）key 只写入一次后多次读取；2）多个 goroutine 读写不重叠的 key 集合。通用高并发读写推荐 RWMutex + map，因为 sync.Map 缺少类型安全且 Range 性能一般。"
+  },
+  {
+    "id": 110,
+    "category": "sync",
+    "difficulty": 2,
+    "title": "sync.Pool 的主要用途是？",
+    "options": [
+      "连接池管理",
+      "临时对象池：减少 GC 压力，复用频繁分配的临时对象（如 buffer）",
+      "goroutine 池",
+      "channel 缓存池"
+    ],
+    "answer": 1,
+    "explain": "sync.Pool 用于复用临时对象，减少内存分配和 GC 开销。典型场景：bytes.Buffer 池、JSON encoder 池。注意 Pool 中的对象可能随时被回收，不适合存储需要持久化的数据。"
+  },
+  {
+    "id": 111,
+    "category": "sync",
+    "difficulty": 2,
+    "title": "sync.RWMutex 相比 sync.Mutex 的优势是？",
+    "options": [
+      "完全替代 Mutex",
+      "允许多个读操作并发执行，只有写操作互斥，适合读多写少场景",
+      "写操作也可以并发",
+      "没有优势，更慢"
+    ],
+    "answer": 1,
+    "explain": "RWMutex 分离读锁（RLock）和写锁（Lock）：多个 goroutine 可同时 RLock（读并发），但 Lock 时独占。读多写少时性能远好于 Mutex。"
+  },
+  {
+    "id": 112,
+    "category": "io",
+    "difficulty": 2,
+    "title": "io.Reader 和 io.Writer 接口分别只有几个方法？",
+    "options": [
+      "各有 3 个方法",
+      "各有 1 个方法：Read(p []byte) (n int, err error) 和 Write(p []byte) (n int, err error)",
+      "Reader 有 2 个，Writer 有 1 个",
+      "没有固定的方法数"
+    ],
+    "answer": 1,
+    "explain": "io.Reader 只有 Read，io.Writer 只有 Write。这是 Go 接口设计哲学：小接口组合大能力。几乎所有 I/O 操作都围绕这两个接口展开。"
+  },
+  {
+    "id": 113,
+    "category": "io",
+    "difficulty": 2,
+    "title": "io.Copy 的作用和典型用法是？",
+    "options": [
+      "复制文件",
+      "从 Reader 读数据写到 Writer，直到 EOF 或出错；如 io.Copy(dst, resp.Body)",
+      "复制字符串",
+      "复制切片"
+    ],
+    "answer": 1,
+    "explain": "io.Copy(dst Writer, src Reader) 是通用的流复制函数，内部用 32KB 缓冲区循环读写。下载文件、转发请求体、管道连接等都常用。返回复制的字节数和错误。"
+  },
+  {
+    "id": 114,
+    "category": "log/slog",
+    "difficulty": 2,
+    "title": "Go 1.21 引入的 log/slog 相比 log 包的优势是？",
+    "options": [
+      "没有优势",
+      "结构化日志（key-value），支持 JSON/Text handler，支持日志级别，高性能",
+      "只是换了包名",
+      "slog 只能输出 JSON"
+    ],
+    "answer": 1,
+    "explain": "slog 是 Go 官方的结构化日志库：slog.Info(\"msg\", \"key\", value) 输出结构化 kv 对，支持 JSON/Text 格式，有 Debug/Info/Warn/Error 级别，可自定义 Handler，性能优于第三方库。"
+  },
+  {
+    "id": 115,
+    "category": "testing",
+    "difficulty": 1,
+    "title": "Go 测试文件和测试函数的命名规则是？",
+    "options": [
+      "test_xxx.go + func test_xxx()",
+      "xxx_test.go + func TestXxx(t *testing.T)",
+      "xxx.test.go + func Testxxx()",
+      "没有固定规则"
+    ],
+    "answer": 1,
+    "explain": "测试文件必须以 _test.go 结尾，测试函数必须以 Test 开头 + 大写字母（如 TestAdd），参数为 *testing.T。基准测试用 BenchmarkXxx(*testing.B)。"
+  },
+  {
+    "id": 116,
+    "category": "类型转换",
+    "difficulty": 1,
+    "title": "以下代码输出？",
+    "code": "var a int32 = 100\nvar b int64 = int64(a)\nfmt.Println(b)",
+    "options": [
+      "100",
+      "编译错误：不能隐式转换",
+      "0",
+      "panic"
+    ],
+    "answer": 0,
+    "explain": "Go 不支持隐式数值类型转换，必须显式 int64(a)。转换后值不变，输出 100。int32→int64 是安全的宽化转换。"
+  },
+  {
+    "id": 117,
+    "category": "类型转换",
+    "difficulty": 1,
+    "title": "以下代码能否编译？",
+    "code": "var a int32 = 100\nvar b int64 = a",
+    "options": [
+      "可以，Go 会自动转换",
+      "不可以，Go 不支持不同数值类型的隐式赋值",
+      "可以，但运行时 panic",
+      "可以，但结果是 0"
+    ],
+    "answer": 1,
+    "explain": "Go 类型系统严格：即使 int32 和 int64 都是整数，也不能隐式赋值。必须 b = int64(a)。这与 C/Java 不同。"
+  },
+  {
+    "id": 118,
+    "category": "类型转换",
+    "difficulty": 2,
+    "title": "以下代码输出？",
+    "code": "var a float64 = 3.99\nvar b int = int(a)\nfmt.Println(b)",
+    "options": [
+      "4（四舍五入）",
+      "3（截断小数部分）",
+      "3.99",
+      "编译错误"
+    ],
+    "answer": 1,
+    "explain": "float→int 转换是截断（truncate），直接丢弃小数部分，不是四舍五入。3.99 → 3，-3.99 → -3。要四舍五入需用 math.Round。"
+  },
+  {
+    "id": 119,
+    "category": "类型转换",
+    "difficulty": 2,
+    "title": "以下代码输出？",
+    "code": "var a int = 256\nvar b int8 = int8(a)\nfmt.Println(b)",
+    "options": [
+      "256",
+      "0",
+      "-128",
+      "panic: overflow"
+    ],
+    "answer": 1,
+    "explain": "int8 范围是 -128~127。256 的二进制低8位是 00000000，所以 int8(256) = 0。Go 整数窄化转换不会 panic，而是静默截断低位。"
+  },
+  {
+    "id": 120,
+    "category": "类型转换",
+    "difficulty": 2,
+    "title": "以下代码输出？",
+    "code": "var a int = 130\nvar b int8 = int8(a)\nfmt.Println(b)",
+    "options": [
+      "130",
+      "-126",
+      "2",
+      "panic"
+    ],
+    "answer": 1,
+    "explain": "130 的二进制是 10000010，作为 int8 解释（最高位为符号位）= -126。窄化转换保留低位比特，按目标类型重新解释。"
+  },
+  {
+    "id": 121,
+    "category": "类型转换",
+    "difficulty": 1,
+    "title": "string 和 []byte 转换会发生什么？",
+    "code": "s := \"hello\"\nb := []byte(s)\nb[0] = 'H'\nfmt.Println(s, string(b))",
+    "options": [
+      "Hello Hello",
+      "hello Hello",
+      "hello hello",
+      "panic"
+    ],
+    "answer": 1,
+    "explain": "string→[]byte 会拷贝底层数据（因为 string 不可变）。修改 b 不影响 s。输出 \"hello Hello\"。"
+  },
+  {
+    "id": 122,
+    "category": "类型转换",
+    "difficulty": 2,
+    "title": "以下代码输出？",
+    "code": "s := \"Hello, 世界\"\nrunes := []rune(s)\nfmt.Println(len(s), len(runes))",
+    "options": [
+      "13 8",
+      "9 8",
+      "13 13",
+      "8 8"
+    ],
+    "answer": 0,
+    "explain": "len(s) 返回字节数：Hello+(逗号空格)=7 + 世(3)+界(3)=13 字节。[]rune(s) 按 Unicode 码点拆分，共 8 个字符。string 底层是 UTF-8 编码的 []byte。"
+  },
+  {
+    "id": 123,
+    "category": "类型转换",
+    "difficulty": 2,
+    "title": "以下代码输出？",
+    "code": "n := 65\nfmt.Println(string(n))",
+    "options": [
+      "65",
+      "A",
+      "编译错误",
+      "空字符串"
+    ],
+    "answer": 1,
+    "explain": "string(int) 将整数视为 Unicode 码点转为对应字符，65 = 'A'。注意这不是数字转字符串！数字转字符串应用 strconv.Itoa(65) 或 fmt.Sprintf(\"%d\", 65)。Go 1.15 起编译器会警告此用法。"
+  },
+  {
+    "id": 124,
+    "category": "类型转换",
+    "difficulty": 1,
+    "title": "类型断言 v.(T) 用于什么场景？",
+    "options": [
+      "数值类型之间转换",
+      "从接口类型中提取具体类型",
+      "字符串转数值",
+      "结构体类型转换"
+    ],
+    "answer": 1,
+    "explain": "类型断言 v.(T) 只能用于接口类型变量，从 interface{} 中提取具体类型。如 val := v.(int)。非接口类型不能做类型断言。"
+  },
+  {
+    "id": 125,
+    "category": "类型转换",
+    "difficulty": 2,
+    "title": "类型断言失败时会怎样？",
+    "code": "var v interface{} = \"hello\"\nn := v.(int)",
+    "options": [
+      "n = 0",
+      "编译错误",
+      "panic: interface conversion",
+      "n = 0 且有 warning"
+    ],
+    "answer": 2,
+    "explain": "单值断言 v.(int) 失败会 panic。安全写法是双值：n, ok := v.(int)，失败时 ok=false、n=零值，不会 panic。"
+  },
+  {
+    "id": 126,
+    "category": "类型转换",
+    "difficulty": 2,
+    "title": "以下 type switch 输出？",
+    "code": "var v interface{} = 3.14\nswitch v.(type) {\ncase int:    fmt.Println(\"int\")\ncase float64: fmt.Println(\"float64\")\ncase string: fmt.Println(\"string\")\ndefault:     fmt.Println(\"other\")\n}",
+    "options": [
+      "int",
+      "float64",
+      "string",
+      "other"
+    ],
+    "answer": 1,
+    "explain": "Go 中无类型浮点常量赋给 interface{} 时默认推断为 float64。type switch 匹配到 float64 分支。"
+  },
+  {
+    "id": 127,
+    "category": "类型转换",
+    "difficulty": 2,
+    "title": "以下自定义类型转换是否合法？",
+    "code": "type Celsius float64\ntype Fahrenheit float64\nvar c Celsius = 100\nf := Fahrenheit(c)",
+    "options": [
+      "合法，底层类型相同（都是 float64）的自定义类型之间可以显式转换",
+      "不合法，自定义类型之间不能转换",
+      "不合法，需要通过 float64 中转",
+      "合法且可以隐式转换"
+    ],
+    "answer": 0,
+    "explain": "底层类型相同的自定义类型之间可以显式转换（不能隐式）。Celsius 和 Fahrenheit 底层都是 float64，所以 Fahrenheit(c) 合法。但语义不同要注意。"
+  },
+  {
+    "id": 128,
+    "category": "类型转换",
+    "difficulty": 3,
+    "title": "以下代码能否编译？",
+    "code": "type MyInt int\nvar a MyInt = 10\nvar b int = 20\nfmt.Println(a + b)",
+    "options": [
+      "可以，输出 30",
+      "不可以，MyInt 和 int 是不同类型，不能直接运算",
+      "可以，但结果类型是 interface{}",
+      "运行时 panic"
+    ],
+    "answer": 1,
+    "explain": "虽然 MyInt 底层是 int，但它们是不同类型，不能直接做算术运算。必须 a + MyInt(b) 或 int(a) + b。Go 的类型系统非常严格。"
+  },
+  {
+    "id": 129,
+    "category": "类型转换",
+    "difficulty": 2,
+    "title": "unsafe.Sizeof 返回的单位是？",
+    "code": "fmt.Println(unsafe.Sizeof(int64(0)))",
+    "options": [
+      "64",
+      "8",
+      "4",
+      "取决于操作系统"
+    ],
+    "answer": 1,
+    "explain": "unsafe.Sizeof 返回字节数（bytes）。int64 是 8 字节（64位/8=8）。int32=4，int16=2，int8=1。int/uint 的大小取决于平台（32位系统4字节，64位系统8字节）。"
+  },
+  {
+    "id": 130,
+    "category": "类型转换",
+    "difficulty": 3,
+    "title": "以下 unsafe 转换输出？",
+    "code": "s := \"hello\"\nb := unsafe.Slice(unsafe.StringData(s), len(s))\nfmt.Println(string(b))",
+    "options": [
+      "hello（零拷贝读取 string 底层字节）",
+      "编译错误",
+      "空字符串",
+      "panic"
+    ],
+    "answer": 0,
+    "explain": "Go 1.20 引入 unsafe.StringData/SliceData/String 实现零拷贝 string↔[]byte。StringData 获取底层指针，unsafe.Slice 构建 []byte。但修改 b 会导致未定义行为（string 应保持不可变）。"
+  },
+  {
+    "id": 131,
+    "category": "并发模式",
+    "difficulty": 2,
+    "title": "以下 Worker Pool 模式的核心思路是？",
+    "options": [
+      "每个任务创建一个 goroutine",
+      "固定数量的 worker goroutine 从共享 channel 取任务执行，控制并发度",
+      "用 mutex 限制同时执行的任务数",
+      "用 timer 定时启动 goroutine"
+    ],
+    "answer": 1,
+    "explain": "Worker Pool 启动固定数量 goroutine 作为 worker，共享一个 task channel；生产者向 channel 发送任务，worker 消费执行。好处：控制并发度、复用 goroutine、避免资源耗尽。"
+  },
+  {
+    "id": 132,
+    "category": "并发模式",
+    "difficulty": 2,
+    "title": "以下 Pipeline 模式的特征是？",
+    "options": [
+      "所有阶段在同一个 goroutine 中执行",
+      "每个阶段是一个 goroutine，通过 channel 连接，数据流经多个阶段处理",
+      "用 mutex 连接各阶段",
+      "只能有两个阶段"
+    ],
+    "answer": 1,
+    "explain": "Pipeline 模式：每个处理阶段是独立 goroutine，接收上游 channel 输入、处理后输出到下游 channel。类似 Unix 管道。适合多步骤数据处理流。"
+  },
+  {
+    "id": 133,
+    "category": "并发模式",
+    "difficulty": 2,
+    "title": "使用 errgroup 的主要好处是？",
+    "code": "g, ctx := errgroup.WithContext(context.Background())\ng.Go(func() error { ... })\nif err := g.Wait(); err != nil { ... }",
+    "options": [
+      "只是 WaitGroup 的别名",
+      "并发执行多个任务，任一出错自动取消 ctx 并收集第一个 error",
+      "自动重试失败的任务",
+      "限制总 goroutine 数"
+    ],
+    "answer": 1,
+    "explain": "errgroup 组合了 WaitGroup + error 收集 + context 取消：Wait 返回第一个非 nil error，WithContext 版本任一 goroutine 出错自动取消 ctx，其他 goroutine 可通过 ctx.Done() 感知。"
+  },
+  {
+    "id": 134,
+    "category": "并发模式",
+    "difficulty": 2,
+    "title": "以下代码实现了什么模式？",
+    "code": "sem := make(chan struct{}, 3)\nfor _, url := range urls {\n    sem <- struct{}{}\n    go func(u string) {\n        defer func() { <-sem }()\n        fetch(u)\n    }(url)\n}",
+    "options": [
+      "Fan-out",
+      "信号量（Semaphore）限制并发数",
+      "超时控制",
+      "优雅关闭"
+    ],
+    "answer": 1,
+    "explain": "用缓冲 channel 作为信号量：容量=最大并发数。发送操作获取信号量（满则阻塞），defer 接收释放信号量。这里最多同时 3 个 goroutine 执行 fetch。"
+  },
+  {
+    "id": 135,
+    "category": "并发模式",
+    "difficulty": 3,
+    "title": "优雅关闭 HTTP 服务器的正确方式是？",
+    "options": [
+      "直接 os.Exit(0)",
+      "监听信号 → srv.Shutdown(ctx) 等待已有请求完成 → 超时后强制退出",
+      "close listener 即可",
+      "kill -9 进程"
+    ],
+    "answer": 1,
+    "explain": "优雅关闭：signal.Notify 捕获 SIGINT/SIGTERM → 调用 srv.Shutdown(ctx) 停止接受新请求并等待进行中的请求完成（ctx 控制超时）→ 超时未完成才强制退出。"
+  },
+  {
+    "id": 136,
+    "category": "并发模式",
+    "difficulty": 2,
+    "title": "以下哪种方式可以让 goroutine 优雅退出？",
+    "options": [
+      "用 runtime.Goexit()",
+      "通过 context.Done() channel 或专用 quit channel 通知退出",
+      "设置全局 bool 变量 stop=true",
+      "调用 os.Exit"
+    ],
+    "answer": 1,
+    "explain": "推荐用 ctx.Done() 或专用 channel 通知 goroutine 退出：goroutine 在 select 中监听退出信号。全局 bool 需要加锁且不优雅；os.Exit 终止整个进程。"
+  },
+  {
+    "id": 137,
+    "category": "标准库实战",
+    "difficulty": 2,
+    "title": "http.Client 设置超时的推荐方式是？",
+    "options": [
+      "time.Sleep 后 cancel",
+      "设置 client.Timeout 字段或用 context.WithTimeout 的 request",
+      "在 handler 中 sleep",
+      "设置 TCP KeepAlive"
+    ],
+    "answer": 1,
+    "explain": "两种方式：1) http.Client{Timeout: 5*time.Second} 全局超时；2) req.WithContext(ctx) 配合 context.WithTimeout 单次请求超时。推荐方式2更灵活，可按请求定制。"
+  },
+  {
+    "id": 138,
+    "category": "标准库实战",
+    "difficulty": 2,
+    "title": "使用 context.WithValue 的注意事项是？",
+    "options": [
+      "可以存任何数据，无限制",
+      "key 应使用自定义未导出类型避免冲突；只存请求级数据（traceID等），不存业务参数",
+      "value 必须是 string",
+      "WithValue 会自动清理过期值"
+    ],
+    "answer": 1,
+    "explain": "WithValue 的 key 推荐用 type ctxKey struct{} 等未导出类型防止包间冲突。只适合存跨 API 边界的元数据（如 traceID、auth token），不要代替函数参数传业务数据。"
+  },
+  {
+    "id": 139,
+    "category": "标准库实战",
+    "difficulty": 2,
+    "title": "os.Signal 处理中，以下代码的作用是？",
+    "code": "quit := make(chan os.Signal, 1)\nsignal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)\n<-quit",
+    "options": [
+      "创建新进程",
+      "阻塞主 goroutine 直到收到 SIGINT 或 SIGTERM 信号",
+      "捕获所有异常",
+      "定时退出"
+    ],
+    "answer": 1,
+    "explain": "signal.Notify 注册信号监听到 channel。<-quit 阻塞直到收到指定信号。常用于主函数等待退出信号后执行清理操作（关闭数据库、HTTP server 等）。缓冲为1防止信号丢失。"
+  },
+  {
+    "id": 140,
+    "category": "标准库实战",
+    "difficulty": 2,
+    "title": "bytes.Buffer 和 strings.Builder 的区别是？",
+    "options": [
+      "完全相同",
+      "Buffer 是 io.ReadWriter（可读可写）；Builder 只能写和最终 String()，不可读不可 Reset 后复用底层内存",
+      "Builder 可以读",
+      "Buffer 只能写"
+    ],
+    "answer": 1,
+    "explain": "bytes.Buffer 实现 io.ReadWriter，可反复读写，适合做 I/O 缓冲。strings.Builder 只追加写 + String()，内部优化了 string 转换（无拷贝），只适合构建最终字符串。"
+  },
+  {
+    "id": 141,
+    "category": "标准库实战",
+    "difficulty": 2,
+    "title": "net/url 包中 url.Values 的主要用途是？",
+    "options": [
+      "解析 JSON",
+      "构建和解析 URL 查询参数（query string）",
+      "验证 URL 格式",
+      "DNS 解析"
+    ],
+    "answer": 1,
+    "explain": "url.Values 是 map[string][]string 的类型别名，用于操作 query 参数：Encode() 生成 \"a=1&b=2\"，Get/Set/Add/Del 增删改查。url.ParseQuery 解析 query string 为 Values。"
+  },
+  {
+    "id": 142,
+    "category": "工程实践",
+    "difficulty": 2,
+    "title": "Go 项目中 internal/ 目录的作用是？",
+    "options": [
+      "放测试文件",
+      "internal 包只能被其父目录及兄弟目录导入，外部包无法访问，实现封装",
+      "放配置文件",
+      "和 vendor 相同"
+    ],
+    "answer": 1,
+    "explain": "internal 是 Go 编译器强制的访问控制：a/b/internal/pkg 只能被 a/b 及其子目录导入，a/c 不能导入。适合放不想暴露给外部的实现细节。"
+  },
+  {
+    "id": 143,
+    "category": "工程实践",
+    "difficulty": 1,
+    "title": "go mod tidy 的作用是？",
+    "options": [
+      "下载所有依赖",
+      "清理 go.mod/go.sum：添加缺失的依赖、移除不再使用的依赖",
+      "升级所有依赖到最新版",
+      "初始化 go module"
+    ],
+    "answer": 1,
+    "explain": "go mod tidy 扫描代码 import，自动添加 go.mod 中缺失的依赖，移除不再被引用的依赖，同步 go.sum。是每次修改 import 后应该运行的命令。"
+  },
+  {
+    "id": 144,
+    "category": "工程实践",
+    "difficulty": 2,
+    "title": "Go 中 init() 函数的特性，下列说法错误的是？",
+    "options": [
+      "每个包可以有多个 init 函数",
+      "init 在 main 之前自动执行",
+      "init 可以有参数和返回值",
+      "同一文件中多个 init 按声明顺序执行"
+    ],
+    "answer": 2,
+    "explain": "init() 必须无参数无返回值。可以有多个（同包甚至同文件），按包导入顺序→文件名顺序→声明顺序执行。在 main 之前运行，常用于初始化全局变量或注册驱动。"
+  },
+  {
+    "id": 145,
+    "category": "工程实践",
+    "difficulty": 2,
+    "title": "Go 中 //go:embed 指令的作用是？",
+    "code": "//go:embed config.yaml\nvar configData []byte",
+    "options": [
+      "运行时读取文件",
+      "编译时将文件内容嵌入到二进制中，运行时无需文件系统访问",
+      "自动生成代码",
+      "注释标记，无实际作用"
+    ],
+    "answer": 1,
+    "explain": "go:embed（Go 1.16+）在编译时将文件/目录嵌入二进制。支持 string、[]byte、embed.FS 三种类型。部署时不再需要附带配置文件/静态资源，单文件部署。"
+  }
+]
